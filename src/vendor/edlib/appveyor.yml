@@ -1,0 +1,29 @@
+platform:
+  - x64
+
+# General idea here is that we have app veyor build worker image (e.g. Visual Studio 2017)
+# on which we run certain commands. Specifically, we use cmake and tell it
+# which Visual Studio version to use to build edlib and then run tests.
+
+environment:
+  matrix:
+  # Visual Studio 2017
+  - BUILD_TYPE: cmake
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    VS_VERSION: Visual Studio 15 Win64  # 15 because Visual Studio 2017 is actually version 15.0. Win64 because it is on x64 platform.
+
+  # Visual Studio 2019
+  - BUILD_TYPE: cmake
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    VS_VERSION: Visual Studio 16  # 16 because Visual Studio 2019 is actually version 16.0.
+
+shallow_clone: true
+
+build_script:
+  - cmake -G "%VS_VERSION%" .
+  - cmake --build . --config Release
+
+test_script:
+  - bin\Release\runTests.exe
+
+deploy: off
