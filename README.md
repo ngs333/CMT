@@ -1,4 +1,5 @@
-# Introduction :
+## Introduction :
+
 This project contains the C++ reference implementation of the Cascading Metric Tree (CMT).
 
 The CMT data structure is presented in the paper "The Cascading Metric Tree",
@@ -18,12 +19,17 @@ are needed to measure and study search performance are usually then recorded to 
 file. There are also some applications used to test query result correctness, by
 comparing the results produced by one tree against another or against brute force.
 
-# Getting the source code :
+## Getting the source code :
+
 git clone --recursive https://github.com/ngs333/CMT.git
 cd CMT
 git submodule update --init --recursive
 
-# Compiling:
+(If you are contributing to this project,  instead of cloning from
+ https://github.com/ngs333/CMT.git  as above, you should clone from your own fork)
+
+## Compiling:
+
 The project uses CMake. It is recommended that you compile in a directory purposely
 set aside for compiling. Say this directory is to be called "build". Consider
 performing these operations :
@@ -36,7 +42,7 @@ make
 
 Note that the executables will be automatically placed in directory CMT/bin.
 
-# Using the VS Code IDE: 
+## Using the VS Code IDE: 
 
 Technically no particular IDE is required to change, compile debug and add code,
 but development has largely been with Microsoft VS Code and that is what we recommend.
@@ -55,8 +61,10 @@ e) CMake  (by TWXS)
 
 
 ## Compiler Information:
+
 This software has been compiled and tested with g++ 9.3 on Linux using C++ standard c++17.
 
 ## Contributing to the project:
-## Currently we are only accepting software contributions via pull requests. Please
-## fork your own copies of the project and make official pull requests for contributing.
+
+Currently we are only accepting software contributions via pull requests. Please
+fork your own copies of the project and make official pull requests for contributing.
