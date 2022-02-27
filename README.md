@@ -34,11 +34,13 @@ The project uses CMake. It is recommended that you compile in a directory purpos
 set aside for compiling. Say this directory is to be called "build". Consider
 performing these operations :
 
+```
 cd CMT/src
 mkdir build
 cd build
 cmake ..
 make
+```
 
 Note that the executables will be automatically placed in directory CMT/bin.
 
