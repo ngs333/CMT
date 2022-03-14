@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 
 	//radiusSearchTestEM_Brin95  (fileNamePrefix + "_Brin95");
 
-	nkSearchTestEM(fileNamePrefix + "_DIM10");
+	kNNSearchCompareEM(fileNamePrefix + "_DIM10");
 	//nkSearchTestEM(fileNamePrefix + "_DIM10_nk");
 	//nkSearchTestEM(fileNamePrefix + "_LCMTs_DIM10");
 	//nkSearchTestEM_S(fileNamePrefix + "_DIMSS_IQI_V2");

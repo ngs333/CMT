@@ -734,9 +734,9 @@ void kNNSearchCompareEM(unsigned int nPoints, unsigned int nQueries,
 		<< nFound << "," << ((nFound * 1.0f) / nqActual) << ","
 		<< stree.getPivotType() << "," << stree.getPartType() << ","
 		<< (1.0f * stree.getPerfStats().getNodesVisited()) / (1.0f * nqActual) << ","
-		<< static_cast<float>(stree.getPerfStats().getDistanceCalls()) / nqActual << ","
-		<< (1.0f * stree.getPerfStats().getDistanceCalls()) / (1.0f * nFound)  << ","
-		<< (1.0f * stree2.getPerfStats().getDistanceCalls()) / (1.0f * nFound) <<  endl;
+		<< static_cast<float>(stree.getPerfStats().getDistanceCalls()) / nqActual << ","<<endl;
+		// << (1.0f * stree.getPerfStats().getDistanceCalls()) / (1.0f * nFound)  << ","
+		// << (1.0f * stree2.getPerfStats().getDistanceCalls()) / (1.0f * nFound) <<  endl;
 	csvFile.close();
 }
 

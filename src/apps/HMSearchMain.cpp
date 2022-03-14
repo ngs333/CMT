@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 	
 	//------------------------------------------------------
 	// kNNSearchCompareEM(100000, 1000, PivotType::RAN, PartType::DMR, 1, fileNamePrefix, true);
-	kNNSearchCompareEM(fileNamePrefix);
+	kNNSearchCompare(fileNamePrefix);
 
 	//nkIncreasingDensityTestEM(100000, 10000, PivotType::RAN, PartType::PIV, 5, fileNamePrefix + "_id");
 	//nkIncreasingDensityTestEM(fileNamePrefix + "_id");

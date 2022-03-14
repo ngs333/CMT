@@ -73,6 +73,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "apps/CMakeFiles/InDimCalculatorApp.dir/DependInfo.cmake"
+  "apps/CMakeFiles/HMSearchApp.dir/DependInfo.cmake"
   "apps/CMakeFiles/ExtractFastaApp.dir/DependInfo.cmake"
   "apps/CMakeFiles/EditDistSearchApp.dir/DependInfo.cmake"
   "apps/CMakeFiles/EuclidSearchApp.dir/DependInfo.cmake"

@@ -45,8 +45,8 @@ public:
 	// 	return os;
 	// }
 };
-// static const unsigned int EuclidianPointDim = 10;
+static const unsigned int HMDIM = 100;
 using EuclidianPointPointType = float;
 // using EuclidianPoint = EuclidianPointG<EuclidianPointPointType, EuclidianPointDim>;
-using HMPoint = HMPointG<EuclidianPointPointType, 100>;
+using HMPoint = HMPointG<EuclidianPointPointType, HMDIM>;
 

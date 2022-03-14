@@ -101,6 +101,7 @@ clean: vendor/edlib/clean
 
 # Recursive "all" directory target.
 apps/all: apps/CMakeFiles/InDimCalculatorApp.dir/all
+apps/all: apps/CMakeFiles/HMSearchApp.dir/all
 apps/all: apps/CMakeFiles/ExtractFastaApp.dir/all
 apps/all: apps/CMakeFiles/EditDistSearchApp.dir/all
 apps/all: apps/CMakeFiles/EuclidSearchApp.dir/all
@@ -114,6 +115,7 @@ apps/preinstall:
 
 # Recursive "clean" directory target.
 apps/clean: apps/CMakeFiles/InDimCalculatorApp.dir/clean
+apps/clean: apps/CMakeFiles/HMSearchApp.dir/clean
 apps/clean: apps/CMakeFiles/ExtractFastaApp.dir/clean
 apps/clean: apps/CMakeFiles/EditDistSearchApp.dir/clean
 apps/clean: apps/CMakeFiles/EuclidSearchApp.dir/clean
@@ -233,7 +235,7 @@ vendor/edlib/clean: vendor/edlib/CMakeFiles/ContinuousTest.dir/clean
 apps/CMakeFiles/InDimCalculatorApp.dir/all: vendor/edlib/CMakeFiles/edlib.dir/all
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/InDimCalculatorApp.dir/build.make apps/CMakeFiles/InDimCalculatorApp.dir/depend
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/InDimCalculatorApp.dir/build.make apps/CMakeFiles/InDimCalculatorApp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=7,8 "Built target InDimCalculatorApp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=9,10 "Built target InDimCalculatorApp"
 .PHONY : apps/CMakeFiles/InDimCalculatorApp.dir/all
 
 # Build rule for subdir invocation for target.
@@ -252,6 +254,33 @@ InDimCalculatorApp: apps/CMakeFiles/InDimCalculatorApp.dir/rule
 apps/CMakeFiles/InDimCalculatorApp.dir/clean:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/InDimCalculatorApp.dir/build.make apps/CMakeFiles/InDimCalculatorApp.dir/clean
 .PHONY : apps/CMakeFiles/InDimCalculatorApp.dir/clean
+
+#=============================================================================
+# Target rules for target apps/CMakeFiles/HMSearchApp.dir
+
+# All Build rule for target.
+apps/CMakeFiles/HMSearchApp.dir/all: vendor/edlib/CMakeFiles/edlib.dir/all
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/HMSearchApp.dir/build.make apps/CMakeFiles/HMSearchApp.dir/depend
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/HMSearchApp.dir/build.make apps/CMakeFiles/HMSearchApp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=7,8 "Built target HMSearchApp"
+.PHONY : apps/CMakeFiles/HMSearchApp.dir/all
+
+# Build rule for subdir invocation for target.
+apps/CMakeFiles/HMSearchApp.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/wg25r/new/CMT/src/build/CMakeFiles 4
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/HMSearchApp.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/wg25r/new/CMT/src/build/CMakeFiles 0
+.PHONY : apps/CMakeFiles/HMSearchApp.dir/rule
+
+# Convenience name for target.
+HMSearchApp: apps/CMakeFiles/HMSearchApp.dir/rule
+
+.PHONY : HMSearchApp
+
+# clean rule for target.
+apps/CMakeFiles/HMSearchApp.dir/clean:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/HMSearchApp.dir/build.make apps/CMakeFiles/HMSearchApp.dir/clean
+.PHONY : apps/CMakeFiles/HMSearchApp.dir/clean
 
 #=============================================================================
 # Target rules for target apps/CMakeFiles/ExtractFastaApp.dir
@@ -341,7 +370,7 @@ apps/CMakeFiles/EuclidSearchApp.dir/clean:
 vendor/edlib/CMakeFiles/runTests.dir/all: vendor/edlib/CMakeFiles/edlib.dir/all
 	$(MAKE) $(MAKESILENT) -f vendor/edlib/CMakeFiles/runTests.dir/build.make vendor/edlib/CMakeFiles/runTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f vendor/edlib/CMakeFiles/runTests.dir/build.make vendor/edlib/CMakeFiles/runTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=15,16 "Built target runTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=17,18 "Built target runTests"
 .PHONY : vendor/edlib/CMakeFiles/runTests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -611,7 +640,7 @@ vendor/edlib/CMakeFiles/NightlyUpdate.dir/clean:
 vendor/edlib/CMakeFiles/edlib-aligner.dir/all: vendor/edlib/CMakeFiles/edlib.dir/all
 	$(MAKE) $(MAKESILENT) -f vendor/edlib/CMakeFiles/edlib-aligner.dir/build.make vendor/edlib/CMakeFiles/edlib-aligner.dir/depend
 	$(MAKE) $(MAKESILENT) -f vendor/edlib/CMakeFiles/edlib-aligner.dir/build.make vendor/edlib/CMakeFiles/edlib-aligner.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=11,12 "Built target edlib-aligner"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=13,14 "Built target edlib-aligner"
 .PHONY : vendor/edlib/CMakeFiles/edlib-aligner.dir/all
 
 # Build rule for subdir invocation for target.
@@ -854,7 +883,7 @@ vendor/edlib/CMakeFiles/NightlyConfigure.dir/clean:
 vendor/edlib/CMakeFiles/helloWorld.dir/all: vendor/edlib/CMakeFiles/edlib.dir/all
 	$(MAKE) $(MAKESILENT) -f vendor/edlib/CMakeFiles/helloWorld.dir/build.make vendor/edlib/CMakeFiles/helloWorld.dir/depend
 	$(MAKE) $(MAKESILENT) -f vendor/edlib/CMakeFiles/helloWorld.dir/build.make vendor/edlib/CMakeFiles/helloWorld.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=13,14 "Built target helloWorld"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=15,16 "Built target helloWorld"
 .PHONY : vendor/edlib/CMakeFiles/helloWorld.dir/all
 
 # Build rule for subdir invocation for target.
@@ -881,7 +910,7 @@ vendor/edlib/CMakeFiles/helloWorld.dir/clean:
 vendor/edlib/CMakeFiles/edlib.dir/all:
 	$(MAKE) $(MAKESILENT) -f vendor/edlib/CMakeFiles/edlib.dir/build.make vendor/edlib/CMakeFiles/edlib.dir/depend
 	$(MAKE) $(MAKESILENT) -f vendor/edlib/CMakeFiles/edlib.dir/build.make vendor/edlib/CMakeFiles/edlib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=9,10 "Built target edlib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/wg25r/new/CMT/src/build/CMakeFiles --progress-num=11,12 "Built target edlib"
 .PHONY : vendor/edlib/CMakeFiles/edlib.dir/all
 
 # Build rule for subdir invocation for target.

@@ -191,6 +191,21 @@ InDimCalculatorApp/fast:
 .PHONY : InDimCalculatorApp/fast
 
 # Convenience name for target.
+apps/CMakeFiles/HMSearchApp.dir/rule:
+	cd /home/wg25r/new/CMT/src/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/HMSearchApp.dir/rule
+.PHONY : apps/CMakeFiles/HMSearchApp.dir/rule
+
+# Convenience name for target.
+HMSearchApp: apps/CMakeFiles/HMSearchApp.dir/rule
+
+.PHONY : HMSearchApp
+
+# fast build rule for target.
+HMSearchApp/fast:
+	cd /home/wg25r/new/CMT/src/build && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/HMSearchApp.dir/build.make apps/CMakeFiles/HMSearchApp.dir/build
+.PHONY : HMSearchApp/fast
+
+# Convenience name for target.
 apps/CMakeFiles/ExtractFastaApp.dir/rule:
 	cd /home/wg25r/new/CMT/src/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/ExtractFastaApp.dir/rule
 .PHONY : apps/CMakeFiles/ExtractFastaApp.dir/rule
@@ -316,6 +331,33 @@ ExtractFasta.cpp.s:
 	cd /home/wg25r/new/CMT/src/build && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/ExtractFastaApp.dir/build.make apps/CMakeFiles/ExtractFastaApp.dir/ExtractFasta.cpp.s
 .PHONY : ExtractFasta.cpp.s
 
+HMSearchMain.o: HMSearchMain.cpp.o
+
+.PHONY : HMSearchMain.o
+
+# target to build an object file
+HMSearchMain.cpp.o:
+	cd /home/wg25r/new/CMT/src/build && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/HMSearchApp.dir/build.make apps/CMakeFiles/HMSearchApp.dir/HMSearchMain.cpp.o
+.PHONY : HMSearchMain.cpp.o
+
+HMSearchMain.i: HMSearchMain.cpp.i
+
+.PHONY : HMSearchMain.i
+
+# target to preprocess a source file
+HMSearchMain.cpp.i:
+	cd /home/wg25r/new/CMT/src/build && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/HMSearchApp.dir/build.make apps/CMakeFiles/HMSearchApp.dir/HMSearchMain.cpp.i
+.PHONY : HMSearchMain.cpp.i
+
+HMSearchMain.s: HMSearchMain.cpp.s
+
+.PHONY : HMSearchMain.s
+
+# target to generate assembly for a file
+HMSearchMain.cpp.s:
+	cd /home/wg25r/new/CMT/src/build && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/HMSearchApp.dir/build.make apps/CMakeFiles/HMSearchApp.dir/HMSearchMain.cpp.s
+.PHONY : HMSearchMain.cpp.s
+
 InDimCalculator.o: InDimCalculator.cpp.o
 
 .PHONY : InDimCalculator.o
@@ -358,6 +400,7 @@ help:
 	@echo "... EditDistSearchApp"
 	@echo "... EuclidSearchApp"
 	@echo "... ExtractFastaApp"
+	@echo "... HMSearchApp"
 	@echo "... InDimCalculatorApp"
 	@echo "... EditDistSearchMain.o"
 	@echo "... EditDistSearchMain.i"
@@ -368,6 +411,9 @@ help:
 	@echo "... ExtractFasta.o"
 	@echo "... ExtractFasta.i"
 	@echo "... ExtractFasta.s"
+	@echo "... HMSearchMain.o"
+	@echo "... HMSearchMain.i"
+	@echo "... HMSearchMain.s"
 	@echo "... InDimCalculator.o"
 	@echo "... InDimCalculator.i"
 	@echo "... InDimCalculator.s"

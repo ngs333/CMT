@@ -27,6 +27,7 @@
 /home/wg25r/new/CMT/src/build/apps/CMakeFiles/list_install_components.dir
 /home/wg25r/new/CMT/src/build/apps/CMakeFiles/rebuild_cache.dir
 /home/wg25r/new/CMT/src/build/apps/CMakeFiles/InDimCalculatorApp.dir
+/home/wg25r/new/CMT/src/build/apps/CMakeFiles/HMSearchApp.dir
 /home/wg25r/new/CMT/src/build/apps/CMakeFiles/ExtractFastaApp.dir
 /home/wg25r/new/CMT/src/build/apps/CMakeFiles/edit_cache.dir
 /home/wg25r/new/CMT/src/build/apps/CMakeFiles/EditDistSearchApp.dir

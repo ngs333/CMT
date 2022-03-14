@@ -189,6 +189,19 @@ InDimCalculatorApp/fast:
 .PHONY : InDimCalculatorApp/fast
 
 #=============================================================================
+# Target rules for targets named HMSearchApp
+
+# Build rule for target.
+HMSearchApp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 HMSearchApp
+.PHONY : HMSearchApp
+
+# fast build rule for target.
+HMSearchApp/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/HMSearchApp.dir/build.make apps/CMakeFiles/HMSearchApp.dir/build
+.PHONY : HMSearchApp/fast
+
+#=============================================================================
 # Target rules for targets named ExtractFastaApp
 
 # Build rule for target.
@@ -686,6 +699,7 @@ help:
 	@echo "... EditDistSearchApp"
 	@echo "... EuclidSearchApp"
 	@echo "... ExtractFastaApp"
+	@echo "... HMSearchApp"
 	@echo "... InDimCalculatorApp"
 	@echo "... edlib"
 	@echo "... edlib-aligner"
