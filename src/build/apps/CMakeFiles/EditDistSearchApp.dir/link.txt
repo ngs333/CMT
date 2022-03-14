@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/EditDistSearchApp.dir/EditDistSearchMain.cpp.o -o /home/wg25r/new/CMT/bin/EditDistSearchApp   -L/home/wg25r/new/CMT/src/../bin  -L/home/mzuniga/usr/local/lib  -Wl,-rpath,/home/wg25r/new/CMT/src/../bin:/home/mzuniga/usr/local/lib ../lib/libedlib.a 

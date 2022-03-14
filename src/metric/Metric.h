@@ -68,6 +68,7 @@ public:
 		return os;
 	}
 };
+// using HMPoint = HMPointG<float, 100>;
 
 class HMMetric : public  Metric<HMPoint> {
 public:

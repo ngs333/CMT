@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../lib/libedlib.a CMakeFiles/edlib.dir/edlib/src/edlib.cpp.o
+/usr/bin/ranlib ../../lib/libedlib.a

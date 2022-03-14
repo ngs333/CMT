@@ -1,5 +1,3 @@
-#ifndef EUCLIDIAN_POINT_H
-#define EUCLIDIAN_POINT_H
 
 #include <array>
 
@@ -16,20 +14,20 @@ private:
 	std::string str;
 	std::string id;
 public:
-	HMPointG(const std::string ident, const std::string data) : {
+	HMPointG(const std::string ident, const std::string data) {
 			str= data;
-			id - ident;
+			id = ident;
 			//defined in std to overrite every member
 	}
 	const std::string& getId() const { return id; }
 	const std::string& getValue() { return str; }
-	const unsigned int dim() { return length; }
+	const unsigned int dim() { return str.length(); }
 	PT operator[](const int i) const { return str[i]; }
 
-	double distance(const EuclidianPointG& p) const {
+	double distance(const HMPointG& p) const {
 		auto sum = 0.0;
-		for (int i = 0; i < DIM; i++) {
-			if(str[i] != p->str[i])
+		for (int i = 0; i < str.length(); i++) {
+			if(str[i] != p.str[i])
 			{
 				sum++;
 			}
@@ -47,10 +45,8 @@ public:
 	// 	return os;
 	// }
 };
-static const unsigned int EuclidianPointDim = 10;
+// static const unsigned int EuclidianPointDim = 10;
 using EuclidianPointPointType = float;
-using EuclidianPoint = EuclidianPointG<EuclidianPointPointType, EuclidianPointDim>;
+// using EuclidianPoint = EuclidianPointG<EuclidianPointPointType, EuclidianPointDim>;
 using HMPoint = HMPointG<EuclidianPointPointType, 100>;
 
-
-#endif // !EUCLIDIAN_POINT_H

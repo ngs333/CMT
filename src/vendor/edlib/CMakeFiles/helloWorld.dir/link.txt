@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wold-style-cast -Wshadow -Wall -Wextra -pedantic -rdynamic CMakeFiles/helloWorld.dir/apps/hello-world/helloWorld.c.o -o ../../bin/helloWorld  ../../lib/libedlib.a 
