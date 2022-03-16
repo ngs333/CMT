@@ -174,7 +174,7 @@ void kNNSearchCompare(const std::string& fileNamePrefix, int k, int n) {
 	for (const auto& [np, nQueries] : nofPoints) {
 		for (const auto& [pivType, pivVal] : pivotTypeMap) {
 			for (const auto& [parType, parVal] : partTypeMap) {
-				for (for mr=k;mr<k+n;mr++) {
+				for (int mr=k;mr<k+n;mr++) {
 					kNNSearchCompare(np, nQueries, pivType, parType, mr, fileNamePrefix );
 				}
 			}
