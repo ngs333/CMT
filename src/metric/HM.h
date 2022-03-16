@@ -17,21 +17,21 @@ public:
 	HMPointG(const std::string ident, const std::string data) {
 			str= data;
 			id = ident;
-			//defined in std to overrite every member
 	}
 	const std::string& getId() const { return id; }
 	const std::string& getValue() { return str; }
 	const unsigned int dim() { return str.length(); }
 	PT operator[](const int i) const { return str[i]; }
 
-	double distance(const HMPointG& p) const {
-		auto sum = 0.0;
+	double distance(HMPointG p) const {
+		auto sum = 0;
 		for (int i = 0; i < str.length(); i++) {
 			if(str[i] != p.str[i])
 			{
 				sum++;
 			}
 		}
+		// std::cout<<sum<<std::endl;
 		return sum;
 	}
 
@@ -45,7 +45,7 @@ public:
 	// 	return os;
 	// }
 };
-static const unsigned int HMDIM = 100;
+static const unsigned int HMDIM = 10;
 using EuclidianPointPointType = float;
 // using EuclidianPoint = EuclidianPointG<EuclidianPointPointType, EuclidianPointDim>;
 using HMPoint = HMPointG<EuclidianPointPointType, HMDIM>;

@@ -8,7 +8,17 @@
 
 int main(int argc, char* argv[]) {
 	using namespace std;
-
+	int k,n; // for parrel
+	if(argc!=3)
+	{
+		k = 0;
+		n = 10;
+		cout<<"k=0;n=10"<<endl;
+	}
+	else{
+		k = stoi(argv[1]);
+		n = stoi(argv[2]);
+	}
 	string fileNamePrefix = { "HM_distance" };
 
 	/*  EUCLIDIAN METRIC TESTS */
@@ -46,7 +56,7 @@ int main(int argc, char* argv[]) {
 	
 	//------------------------------------------------------
 	// kNNSearchCompareEM(100000, 1000, PivotType::RAN, PartType::DMR, 1, fileNamePrefix, true);
-	kNNSearchCompare(fileNamePrefix);
+	kNNSearchCompare(fileNamePrefix,k,n);
 
 	//nkIncreasingDensityTestEM(100000, 10000, PivotType::RAN, PartType::PIV, 5, fileNamePrefix + "_id");
 	//nkIncreasingDensityTestEM(fileNamePrefix + "_id");

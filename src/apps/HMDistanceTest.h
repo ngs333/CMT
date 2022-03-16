@@ -28,9 +28,12 @@
 
 std::tuple<std::vector<HMPoint>, std::vector<HMPoint>> //return value
 generatePointsQD(unsigned int nPoints, unsigned int nQueries) {
+using namespace std;
+
+	cout<<nQueries<<endl;
 		// srand(time(NULL));
 		using namespace std;
-		constexpr unsigned int dim = 100; //string length
+		constexpr unsigned int dim = 10; //string length
 		
 		std::vector<HMPoint> words;
 		words.reserve(nPoints); //For vector
@@ -52,31 +55,21 @@ generatePointsQD(unsigned int nPoints, unsigned int nQueries) {
 		free(word);
 		for(int i=1; i<nPoints; i++)
 		{
-			if(0)
-			// string lastString = qWords[i-1].getValue(); //shunxu xkou 
-			{
-				string lastString = words[i-1].getValue(); //shunxu xkou 
-				lastString[rand()%DIM]=rand()%(2)+65;
-				// cout<<lastString<<endl;
-				// qWords.push_back(lastString); 
-				// HMPoint* word = new HMPoint(lastString, lastString);
-				HMPoint* word = new HMPoint(lastString, lastString);
-				words.push_back(*word);
-				free(word);
-			}
-			else
-			{
+			// else
+			// {
 				for(int j=0; j<dim; j++)
 				{
 					myStr[j] = rand()%2+65;
 				}
 				string s = myStr;
+			// cout<<s<<endl;
+
 				// string s = "aaaaaa";
 				// cout<<s<<endl;
 				HMPoint* word = new HMPoint(s, s);
 				words.push_back(*word);
 				free(word);
-			}
+			// }
 
 		}
 
@@ -164,8 +157,8 @@ void kNNSearchCompare(unsigned int nPoints, unsigned int nQueries,
 		<< nFound << "," << ((nFound * 1.0f) / nqActual) << ","
 		<< stree.getPivotType() << "," << stree.getPartType() << ","
 		<< (1.0f * stree.getPerfStats().getNodesVisited()) / (1.0f * nqActual) << ","
-		<< static_cast<float>(stree.getPerfStats().getDistanceCalls()) / nqActual << ","<<endl;
-		<< static_cast<float>(stree2.getPerfStats().getDistanceCalls()) / nqActual << ","<<endl;
+		<< static_cast<float>(stree.getPerfStats().getDistanceCalls()) / nqActual << ","
+		<< static_cast<float>(stree2.getPerfStats().getDistanceCalls()) / nqActual <<endl;
 		// << (1.0f * stree.getPerfStats().getDistanceCalls()) / (1.0f * nFound)  << ","
 		// << (1.0f * stree2.getPerfStats().getDistanceCalls()) / (1.0f * nFound) <<  endl;
 	csvFile.close();
@@ -173,15 +166,15 @@ void kNNSearchCompare(unsigned int nPoints, unsigned int nQueries,
 
 
 
-void kNNSearchCompare(const std::string& fileNamePrefix) {
+void kNNSearchCompare(const std::string& fileNamePrefix, int k, int n) {
 	//std::map<unsigned int, unsigned int> nofPoints{ {100,1},{1000,10}, {10000,10}, {1000000,100} };
-	std::map<unsigned int, unsigned int> nofPoints{ {100000,1000} };
-	std::vector<unsigned int> maxResults{ 1,5, 10, 15, 20, 25, 30, 35  };
+	std::map<unsigned int, unsigned int> nofPoints{ {1000000,10000} };
+	// std::vector<unsigned int> maxResults{ 1,2,3,4,5,6,7,8,9,10  };
 	//
 	for (const auto& [np, nQueries] : nofPoints) {
 		for (const auto& [pivType, pivVal] : pivotTypeMap) {
 			for (const auto& [parType, parVal] : partTypeMap) {
-				for (const auto& mr : maxResults) {
+				for (for mr=k;mr<k+n;mr++) {
 					kNNSearchCompare(np, nQueries, pivType, parType, mr, fileNamePrefix );
 				}
 			}
