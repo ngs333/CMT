@@ -31,7 +31,7 @@ generatePointsQD(unsigned int nPoints, unsigned int nQueries) {
 using namespace std;
 
 	cout<<nQueries<<endl;
-		// srand(time(NULL));
+		srand(456789);
 		using namespace std;
 		constexpr unsigned int dim = 10; //string length
 		
@@ -114,7 +114,7 @@ void kNNSearchCompare(unsigned int nPoints, unsigned int nQueries,
 	
 	//auto [points, qPoints] = generatePointsQD(nPoints, nQueries);
 	auto [points, qPoints] = generatePointsQD(nPoints, nQueries);
-
+	//duzizhelicaishengchengxuyaozhongdi
 
 	std::clock_t start = std::clock();
 	CMTree<HMPoint, MetricType> stree(points, met, pivT, partT, kxBalancedTreeHeight(1, points.size()));
@@ -168,13 +168,14 @@ void kNNSearchCompare(unsigned int nPoints, unsigned int nQueries,
 
 void kNNSearchCompare(const std::string& fileNamePrefix, int k, int n) {
 	//std::map<unsigned int, unsigned int> nofPoints{ {100,1},{1000,10}, {10000,10}, {1000000,100} };
-	std::map<unsigned int, unsigned int> nofPoints{ {1000000,10000} };
+	std::map<unsigned int, unsigned int> nofPoints{ {100000,10000} };
 	// std::vector<unsigned int> maxResults{ 1,2,3,4,5,6,7,8,9,10  };
 	//
 	for (const auto& [np, nQueries] : nofPoints) {
 		for (const auto& [pivType, pivVal] : pivotTypeMap) {
 			for (const auto& [parType, parVal] : partTypeMap) {
-				for (int mr=k;mr<k+n;mr++) {
+				for (int mr=k;mr<k+n;mr+=5) {
+				// for (int mr=k;mr<k+n;mr=+5) {
 					kNNSearchCompare(np, nQueries, pivType, parType, mr, fileNamePrefix );
 				}
 			}
