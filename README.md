@@ -21,9 +21,11 @@ comparing the results produced by one tree against another or against brute forc
 
 ## Getting the source code :
 
+```
 git clone --recursive https://github.com/ngs333/CMT.git
 cd CMT
 git submodule update --init --recursive
+```
 
 (If you are contributing to this project,  instead of cloning from
  https://github.com/ngs333/CMT.git  as above, you should clone from your own fork)
