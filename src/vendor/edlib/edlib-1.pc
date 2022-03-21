@@ -1,0 +1,9 @@
+libdir=/usr/local/lib64
+includedir=/usr/local/include
+
+Name: Edlib
+Description: Lightweight and super fast C/C++ library for sequence alignment using edit distance
+Version: 1.2.6
+
+Libs: -L${libdir} -ledlib
+Cflags: -I${includedir}

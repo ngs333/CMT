@@ -694,7 +694,8 @@ void kNNSearchCompareEM(unsigned int nPoints, unsigned int nQueries,
 
 	std::clock_t start = std::clock();
 	CMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, kxBalancedTreeHeight(1, points.size()));
-	BruteForceSearch<EuclidianPoint, MetricType> stree2(points, met);
+	SPMTree<EuclidianPoint, MetricType> stree2(points, met, pivT, partT, kxBalancedTreeHeight(1, points.size()));
+	// BruteForceSearch<EuclidianPoint, MetricType> stree2(points, met);
 
 	bTime = dTimeSeconds(start);
 	cout << "firstkSearchTest btime=" << bTime << endl;
@@ -734,7 +735,9 @@ void kNNSearchCompareEM(unsigned int nPoints, unsigned int nQueries,
 		<< stree.getPivotType() << "," << stree.getPartType() << ","
 		<< (1.0f * stree.getPerfStats().getNodesVisited()) / (1.0f * nqActual) << ","
 		<< static_cast<float>(stree.getPerfStats().getDistanceCalls()) / nqActual << ","
-		<< (1.0f * stree.getPerfStats().getDistanceCalls()) / (1.0f * nFound) <<  endl;
+		<< static_cast<float>(stree2.getPerfStats().getDistanceCalls()) / nqActual << ","<<endl;
+		// << (1.0f * stree.getPerfStats().getDistanceCalls()) / (1.0f * nFound)  << ","
+		// << (1.0f * stree2.getPerfStats().getDistanceCalls()) / (1.0f * nFound) <<  endl;
 	csvFile.close();
 }
 
@@ -755,7 +758,7 @@ void radiusSearchCompareEM(const std::string& fileNamePrefix) {
 void kNNSearchCompareEM(const std::string& fileNamePrefix) {
 	//std::map<unsigned int, unsigned int> nofPoints{ {100,1},{1000,10}, {10000,10}, {1000000,100} };
 	std::map<unsigned int, unsigned int> nofPoints{ {100000,1000} };
-	std::vector<unsigned int> maxResults{ 1,5 };
+	std::vector<unsigned int> maxResults{ 1,5, 10 };
 	//
 	for (const auto& [np, nQueries] : nofPoints) {
 		for (const auto& [pivType, pivVal] : pivotTypeMap) {

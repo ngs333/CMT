@@ -1,4 +1,4 @@
-#ifndef SW_METRIC_TESTS
+5#ifndef SW_METRIC_TESTS
 #define SW_METRIC_TESTS
 
 #include <iostream>
