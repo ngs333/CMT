@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wold-style-cast -Wshadow -Wall -Wextra -pedantic -rdynamic CMakeFiles/edlib-aligner.dir/apps/aligner/aligner.cpp.o -o ../../bin/edlib-aligner  ../../lib/libedlib.a 

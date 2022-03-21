@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/EuclidSearchApp.dir/EuclidSearchMain.cpp.o -o /home/wg25r/new/CMT/bin/EuclidSearchApp   -L/home/wg25r/new/CMT/src/../bin  -L/home/mzuniga/usr/local/lib  -Wl,-rpath,/home/wg25r/new/CMT/src/../bin:/home/mzuniga/usr/local/lib ../lib/libedlib.a 
