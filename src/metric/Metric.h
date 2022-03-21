@@ -11,7 +11,7 @@
 #include "Misc.h"
 #include "EditDistance.h"
 #include "edlib.h"
-
+#include "HM.h"
 
 template <class T>
 class Metric {
@@ -68,6 +68,16 @@ public:
 		return os;
 	}
 };
+// using HMPoint = HMPointG<float, 100>;
 
+class HMMetric : public  Metric<HMPoint> {
+public:
+	double distance(const HMPoint& p1, const HMPoint& p2) {
+		return p1.distance(p2);
+	}
+	double distance(const HMPoint* p1, const HMPoint* p2) {
+		return distance(*p1, *p2);
+	}
+};
 
 #endif

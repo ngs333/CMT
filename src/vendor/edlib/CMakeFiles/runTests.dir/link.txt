@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wold-style-cast -Wshadow -Wall -Wextra -pedantic -rdynamic CMakeFiles/runTests.dir/test/runTests.cpp.o -o ../../bin/runTests  ../../lib/libedlib.a 
