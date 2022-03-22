@@ -9,17 +9,20 @@
 int main(int argc, char* argv[]) {
 	using namespace std;
 	int k,n; // for parrel
-	if(argc!=3)
+	string filename;
+	if(argc!=4)
 	{
 		k = 1;
 		n = 100;
+//filename = "";
 		cout<<"k=1;n=100"<<endl;
 	}
 	else{
 		k = stoi(argv[1]);
 		n = stoi(argv[2]);
+		
 	}
-	string fileNamePrefix = { "HM_distance" };
+	string fileNamePrefix = { "HM_distance_k="+string(argv[1]) + "_n=" + string(argv[2]) };
 
 	/*  EUCLIDIAN METRIC TESTS */
 	
