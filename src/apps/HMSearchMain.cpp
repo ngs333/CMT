@@ -4,20 +4,25 @@
 #include <fstream>
 #include <thread>
 #include <chrono>
-
-#include "EuclidianTests.h"
-#include "Metric.h"
-#include "SearchCommon.h"
-
-#ifdef __WIN32
-unsigned int DistanceIntervalSM<float>::used = 0;
-std::vector< DistanceIntervalSM<float>> DistanceIntervalSM<float>::data;
-#endif
+#include "HMDistanceTest.h"
 
 int main(int argc, char* argv[]) {
 	using namespace std;
-
-	string fileNamePrefix = { "mtreeRunTimes_EM" };
+	int k,n; // for parrel
+	string filename;
+	if(argc!=3)
+	{
+		k = 1;
+		n = 100;
+//filename = "";
+		cout<<"k=1;n=100"<<endl;
+	}
+	else{
+		k = stoi(argv[1]);
+		n = stoi(argv[2]);
+		
+	}
+	string fileNamePrefix = { "HM_distance_k="+string(argv[1]) + "_n=" + string(argv[2]) };
 
 	/*  EUCLIDIAN METRIC TESTS */
 	
@@ -30,7 +35,7 @@ int main(int argc, char* argv[]) {
 
 	//radiusSearchTestEM_Brin95  (fileNamePrefix + "_Brin95");
 
-	kNNSearchCompareEM(fileNamePrefix + "_DIM10");
+	//nkSearchTestEM(fileNamePrefix + "_DIM10");
 	//nkSearchTestEM(fileNamePrefix + "_DIM10_nk");
 	//nkSearchTestEM(fileNamePrefix + "_LCMTs_DIM10");
 	//nkSearchTestEM_S(fileNamePrefix + "_DIMSS_IQI_V2");
@@ -54,7 +59,7 @@ int main(int argc, char* argv[]) {
 	
 	//------------------------------------------------------
 	// kNNSearchCompareEM(100000, 1000, PivotType::RAN, PartType::DMR, 1, fileNamePrefix, true);
-	// kNNSearchCompareEM(fileNamePrefix);
+	kNNSearchCompare(fileNamePrefix,k,n);
 
 	//nkIncreasingDensityTestEM(100000, 10000, PivotType::RAN, PartType::PIV, 5, fileNamePrefix + "_id");
 	//nkIncreasingDensityTestEM(fileNamePrefix + "_id");

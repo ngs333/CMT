@@ -13,7 +13,13 @@
 /bin/
 # MZ ingnore every direcotry with these names
 CMakeFiles/
+<<<<<<< HEAD
 
+=======
+# WG all locations
+**/CMakeFiles
+**/.vscode
+>>>>>>> 2d81fae76f5a9e65b2549f6a0861862a8a4dda00
 # User-specific files
 *.suo
 *.user
