@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 	using namespace std;
 	int k,n; // for parrel
 	string filename;
-	if(argc!=4)
+	if(argc!=3)
 	{
 		k = 1;
 		n = 100;

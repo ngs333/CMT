@@ -168,7 +168,7 @@ void kNNSearchCompare(unsigned int nPoints, unsigned int nQueries,
 
 void kNNSearchCompare(const std::string& fileNamePrefix, int k, int n) {
 	//std::map<unsigned int, unsigned int> nofPoints{ {100,1},{1000,10}, {10000,10}, {1000000,100} };
-	std::map<unsigned int, unsigned int> nofPoints{ {100000,10000} };
+	std::map<unsigned int, unsigned int> nofPoints{ {100000,1000} };
 	// std::vector<unsigned int> maxResults{ 1,2,3,4,5,6,7,8,9,10  };
 	//
 	for (const auto& [np, nQueries] : nofPoints) {
