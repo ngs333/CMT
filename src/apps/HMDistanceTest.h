@@ -74,7 +74,7 @@ using namespace std;
 		}
 
 		// int notInSet = nPoints; //rand()%(nPoints/50); // not 10 ()  not 10* xkoukun
-		int notInSet = 0;rand()%(nQueries/50); // not 10 ()  not 10* xkoukun
+		int notInSet = 0;//rand()%(nQueries/50); // not 10 ()  not 10* xkoukun
 		cout<<"-----------"<<endl;
 		// qWords.push_back(words[rand()%nPoints]);
 		for(int i=0; i<nQueries-notInSet; i++)
@@ -157,6 +157,7 @@ void kNNSearchCompare(unsigned int nPoints, unsigned int nQueries,
 		<< nFound << "," << ((nFound * 1.0f) / nqActual) << ","
 		<< stree.getPivotType() << "," << stree.getPartType() << ","
 		<< (1.0f * stree.getPerfStats().getNodesVisited()) / (1.0f * nqActual) << ","
+		<< (1.0f * stree2.getPerfStats().getNodesVisited()) / (1.0f * nqActual) << ","
 		<< static_cast<float>(stree.getPerfStats().getDistanceCalls()) / nqActual << ","
 		<< static_cast<float>(stree2.getPerfStats().getDistanceCalls()) / nqActual <<endl;
 		// << (1.0f * stree.getPerfStats().getDistanceCalls()) / (1.0f * nFound)  << ","
@@ -168,15 +169,86 @@ void kNNSearchCompare(unsigned int nPoints, unsigned int nQueries,
 
 void kNNSearchCompare(const std::string& fileNamePrefix, int k, int n) {
 	//std::map<unsigned int, unsigned int> nofPoints{ {100,1},{1000,10}, {10000,10}, {1000000,100} };
-	std::map<unsigned int, unsigned int> nofPoints{ {10000,1000} };
-	// std::vector<unsigned int> maxResults{ 1,2,3,4,5,6,7,8,9,10  };
-	//https://www.cemc.uwaterloo.ca/contests/past_contests/2008/2008EuclidContest.pdf
+	std::map<unsigned int, unsigned int> nofPoints{ {1000,100} };
 	for (const auto& [np, nQueries] : nofPoints) {
 		for (const auto& [pivType, pivVal] : pivotTypeMap) {
 			for (const auto& [parType, parVal] : partTypeMap) {
 				for (int mr=k;mr<k+n;mr*=2) {
 				// for (int mr=k;mr<k+n;mr=+5) {
 					kNNSearchCompare(np, nQueries, pivType, parType, mr, fileNamePrefix );
+				}
+			}
+		}
+	}
+}
+
+
+
+void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, PivotType pivT, PartType partT, 
+	const std::string& fileNamePrefix, float rad,  std::vector<HMPoint> points, std::vector<HMPoint> qPoints) {
+	using namespace std;
+	unsigned int bTime, sTime;
+	using MetricType = HMMetric;
+	MetricType met;
+	unsigned int nqActual = 0;
+
+	// auto [points, qPoints] = generatePointsQD(nPoints, nQueries);
+
+	auto start = std::clock();
+	CMTree<HMPoint, MetricType> stree(points, met,pivT, partT, kxBalancedTreeHeight(1,points.size()));
+	// BruteForceSearch<HMPoint, MetricType> stree2(points, met); //This is not baseline weism huilaile xiamian de zhixian shi stree not 2
+	SPMTree<HMPoint, MetricType> stree2(points, met, pivT, partT, kxBalancedTreeHeight(1,points.size()));  //Is that because I didn't put in enough arguments?
+	bTime = dTimeSeconds(start);
+	cout << "radiusSearchTest btime=" << bTime << endl;
+
+	std::set<unsigned int> depths;
+	double radiusSum = stree.radiusSumAndDepths(depths);
+
+	start = std::clock();
+	unsigned int nFound = 0;
+	unsigned int diffCount = 0;
+	const unsigned int maxResults = 1e7;
+	// auto rad = 1;
+	for (const auto& qp : qPoints) {
+		RadiusQuery<HMPoint> rq(qp, rad, maxResults);
+		stree.search(rq);
+
+		NearestKQuery<HMPoint> rq2(qp, rad, maxResults);
+		// stree2.search(rq2);
+
+		nFound += rq.getNeighbors().size();
+
+
+	    nqActual++;
+		if ((nqActual % 10000) == 0) { cout << "finished search i= " << nQueries << endl; }
+	}
+	sTime = dTimeSeconds(start);
+
+	string runTimeFileName{ fileNamePrefix + "_rs_compare.csv"};
+	ofstream theFileA(runTimeFileName, ios::app);
+	theFileA 
+		<< rad << "," << points.size() << "," << diffCount << "," << nqActual << "," << nFound << "," << radiusSum << ","
+		<< stree.getPivotType() << "," << stree.getPartType() << ","
+		<< (stree.getPerfStats().getNodesVisited() / nQueries) << ","
+		<< (stree.getPerfStats().getDistanceCalls() / nQueries) << ","
+		<< (stree2.getPerfStats().getDistanceCalls() / nQueries)<<endl;
+		// << bTime << "," << sTime << endl;
+
+	theFileA.close();	
+}
+
+
+void radiusSearchCompareEM(const std::string& fileNamePrefix) {
+	std::map<unsigned int, unsigned int> nofPoints{  {10000000, 20} };
+	std::vector<float> rads{2,4,8,16,32,64,128,256,512,1024,2048,4096,8192}; 
+	for (const auto& [np, nSkip] : nofPoints) {
+		auto [points, qPoints] = generatePointsQD(np, nSkip);
+
+		for (const auto& [pivType, pivVal] : pivotTypeMap) {
+			for (const auto& [parType, parVal] : partTypeMap) {
+				for (float rad : rads) {
+					radiusSearchCompareEM(np, nSkip, pivType, parType, fileNamePrefix, rad, points, qPoints);
+
 				}
 			}
 		}

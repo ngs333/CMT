@@ -8,21 +8,22 @@
 
 int main(int argc, char* argv[]) {
 	using namespace std;
-	int k,n; // for parrel
-	string filename;
-	if(argc!=3)
-	{
-		k = 1;
-		n = 100;
-//filename = "";
-		cout<<"k=1;n=100"<<endl;
-	}
-	else{
-		k = stoi(argv[1]);
-		n = stoi(argv[2]);
+	radiusSearchCompareEM("radHM");
+// 	int k,n; // for parrel
+// 	string filename;
+// 	if(argc!=3)
+// 	{
+// 		k = 1;
+// 		n = 100;
+// //filename = "";
+// 		cout<<"k=1;n=100"<<endl;
+// 	}
+// 	else{
+// 		k = stoi(argv[1]);
+// 		n = stoi(argv[2]);
 		
-	}
-	string fileNamePrefix = { "HM_distance_k="+string(argv[1]) + "_n=" + string(argv[2]) };
+// 	}
+// 	string fileNamePrefix = { "HM_distance_k="+string(argv[1]) + "_n=" + string(argv[2]) };
 
 	/*  EUCLIDIAN METRIC TESTS */
 	
@@ -59,7 +60,7 @@ int main(int argc, char* argv[]) {
 	
 	//------------------------------------------------------
 	// kNNSearchCompareEM(100000, 1000, PivotType::RAN, PartType::DMR, 1, fileNamePrefix, true);
-	kNNSearchCompare(fileNamePrefix,k,n);
+	// kNNSearchCompare(fileNamePrefix,k,n);
 
 	//nkIncreasingDensityTestEM(100000, 10000, PivotType::RAN, PartType::PIV, 5, fileNamePrefix + "_id");
 	//nkIncreasingDensityTestEM(fileNamePrefix + "_id");
