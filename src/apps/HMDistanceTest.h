@@ -214,7 +214,7 @@ void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, Pi
 		stree.search(rq);
 
 		NearestKQuery<HMPoint> rq2(qp, rad, maxResults);
-		// stree2.search(rq2);
+		stree2.search(rq2); //guaibude0zxkousuankunhuangkun
 
 		nFound += rq.getNeighbors().size();
 
