@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[]) {
 	using namespace std;
-	radiusSearchCompareEM("radHM");
+	radiusSearchCompareEM("radHM_7");
 // 	int k,n; // for parrel
 // 	string filename;
 // 	if(argc!=3)
