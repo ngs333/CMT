@@ -8,22 +8,18 @@
 
 int main(int argc, char* argv[]) {
 	using namespace std;
-	radiusSearchCompareEM("radHM_7");
-// 	int k,n; // for parrel
-// 	string filename;
-// 	if(argc!=3)
-// 	{
-// 		k = 1;
-// 		n = 100;
-// //filename = "";
-// 		cout<<"k=1;n=100"<<endl;
-// 	}
-// 	else{
-// 		k = stoi(argv[1]);
-// 		n = stoi(argv[2]);
-		
-// 	}
-// 	string fileNamePrefix = { "HM_distance_k="+string(argv[1]) + "_n=" + string(argv[2]) };
+	int start, end; // for parrel
+	string filename;
+	if(argc!=3)
+	{
+		cout<<"error!"<<endl;
+	}
+	else{
+		start = stoi(argv[1]);
+		end = stoi(argv[2]);
+	}
+	string fileNamePrefix =  "HM_distance_k="+string(argv[1]) + "_n=" + string(argv[2]);
+	radiusSearchCompareEM("radHM", start, end);
 
 	/*  EUCLIDIAN METRIC TESTS */
 	
