@@ -207,7 +207,7 @@ void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, Pi
 	start = std::clock();
 	unsigned int nFound = 0;
 	unsigned int diffCount = 0;
-	const unsigned int maxResults = 1e7;
+	const unsigned int maxResults = 1e10;
 	// auto rad = 1;
 	for (const auto& qp : qPoints) {
 		RadiusQuery<HMPoint> rq(qp, rad, maxResults);
@@ -246,7 +246,8 @@ void radiusSearchCompareEM(const std::string& fileNamePrefix) {
 
 		for (const auto& [pivType, pivVal] : pivotTypeMap) {
 			for (const auto& [parType, parVal] : partTypeMap) {
-				for (float rad = 1; rad <=20; rad++) {
+				for (float rad = 1; rad<150; rad++) {
+
 					radiusSearchCompareEM(np, nSkip, pivType, parType, fileNamePrefix, rad, points, qPoints);
 
 				}

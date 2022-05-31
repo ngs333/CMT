@@ -12,6 +12,7 @@
 #include "EditDistance.h"
 #include "edlib.h"
 #include "HM.h"
+#include "ged.h"
 
 template <class T>
 class Metric {
@@ -76,6 +77,16 @@ public:
 		return p1.distance(p2);
 	}
 	double distance(const HMPoint* p1, const HMPoint* p2) {
+		return distance(*p1, *p2);
+	}
+};
+
+class GEDMetric : public  Metric<GED> {
+public:
+	double distance(const GED& p1, const GED& p2) {
+		return p1.distance(p2);
+	}
+	double distance(const GED* p1, const GED* p2) {
 		return distance(*p1, *p2);
 	}
 };

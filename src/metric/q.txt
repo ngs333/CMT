@@ -1,0 +1,10 @@
+t 1 methane
+v 0 carbon1
+v 1 H1
+v 2 H2
+v 3 H3
+v 4 H4
+e 0 1 1
+e 0 2 2
+e 0 3 3
+e 0 4 4
