@@ -207,7 +207,7 @@ void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, Pi
 	start = std::clock();
 	unsigned int nFound = 0;
 	unsigned int diffCount = 0;
-	const unsigned int maxResults = 1e10;
+	const unsigned int maxResults = 4294967295;
 	// auto rad = 1;
 	for (const auto& qp : qPoints) {
 		RadiusQuery<HMPoint> rq(qp, rad, maxResults);
