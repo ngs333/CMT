@@ -30,7 +30,7 @@ public:
 			if(str[i] != p.str[i])
 			{
 				// std::cout<<i<<"\n";
-				sum+=abs(randomVector[i]);
+				sum+=fabs(randomVector[i]-1);
 			}
 		}
 		// std::cout<<sum<<std::endl;
