@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 		end = stoi(argv[2]);
 	}
 	string fileNamePrefix =  "HM_distance_realknn_k="+string(argv[1]) + "_n=" + string(argv[2]);
-	radiusSearchCompareEM(fileNamePrefix, start, end);//zhidaoyylenianbizimeixiestrigkunbizi
+	kNNSearchCompare(fileNamePrefix, start, end);//zhidaoyylenianbizimeixiestrigkunbizi
 
 	/*  EUCLIDIAN METRIC TESTS */
 	
