@@ -247,7 +247,7 @@ void radiusSearchCompareEM(const std::string& fileNamePrefix, start, end) {
 
 		for (const auto& [pivType, pivVal] : pivotTypeMap) {
 			for (const auto& [parType, parVal] : partTypeMap) {
-				for (float rad = start; rad<end; rad+=0.5) {
+				for (float rad = 1; rad<5.5; rad+=0.5) {
 					radiusSearchCompareEM(np, nSkip, pivType, parType, fileNamePrefix, rad, points, qPoints);
 				}
 			}
