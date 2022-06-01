@@ -239,7 +239,7 @@ void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, Pi
 }
 
 
-void radiusSearchCompareEM(const std::string& fileNamePrefix) {
+void radiusSearchCompareEM(const std::string& fileNamePrefix, start, end) {
 	std::map<unsigned int, unsigned int> nofPoints{  {10000000, 50} };
 	// std::vector<float> rads{2,4,8,16,32,64,128,256,512,1024,2048,4096,8192}; 
 	for (const auto& [np, nSkip] : nofPoints) {
@@ -247,7 +247,7 @@ void radiusSearchCompareEM(const std::string& fileNamePrefix) {
 
 		for (const auto& [pivType, pivVal] : pivotTypeMap) {
 			for (const auto& [parType, parVal] : partTypeMap) {
-				for (float rad = 1; rad<5; rad+=0.5) {
+				for (float rad = start; rad<end; rad+=0.5) {
 					radiusSearchCompareEM(np, nSkip, pivType, parType, fileNamePrefix, rad, points, qPoints);
 				}
 			}
