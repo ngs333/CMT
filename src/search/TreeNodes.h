@@ -20,10 +20,10 @@ public:
 	T* object; 
 	CNode* left;
 	CNode* right;
+	int size;
 	FSVector<DI> adi;//the ancestral distance interrval
 	//std::vector<DI> adi;
 	DistanceInterval<float>    di; //Normal child distance interval
-
 	//std::vector<float> dpivots;//Note that sizeof(std::vector<float>) =24 bytes on a 64 bit Windows 
 	std::deque<float> dpivots; //TODO: fix above
 	float sstemp;
@@ -46,11 +46,27 @@ template <class T>
 class MNode {
 public:
 	T* object;           // Point or object selected as pivot - one per node.
+	int size;
 	DistanceInterval<float> di; 
 	double sstemp;//Used a temp variable and aslo for sef score after tree is done.
 	MNode* left;  //I.e. left child, etc.
 	MNode* right;
 	MNode(T* object) : object{ object } {}
+	bool isLeaf() { return ((left == nullptr) && (right == nullptr)); }
+	void setLeaf() { left = nullptr;  right = nullptr; }
+};
+
+//Metric tree nodes.
+template <class T>
+class ANode {
+public:
+	T* object;           // Point or object selected as pivot - one per node.
+	int size;
+    DistanceInterval<float> diL, diR;
+	double sstemp;//Used a temp variable and aslo for sef score after tree is done.
+	ANode* left;  //I.e. left child, etc.
+	ANode* right;
+	ANode(T* object) : object{ object } {}
 	bool isLeaf() { return ((left == nullptr) && (right == nullptr)); }
 	void setLeaf() { left = nullptr;  right = nullptr; }
 };
