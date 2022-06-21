@@ -149,36 +149,35 @@ if (this->partitionType == PartType::BOM) {
 template <typename T, typename M>
 void APMTree<T, M>::calculateDI(const NodeItr nd, const NodeItr begin, const NodeItr median, const NodeItr end)
 {
-	if (begin == end){
-		// for leaf nodes
-		(*nd)->diL.setNear(0);
-		(*nd)->diL.setFar(0);
-		(*nd)->diR.setNear(0);
-		(*nd)->diR.setFar(0);
+	(*nd)->diL.setNear(0);
+	(*nd)->diL.setFar(0);
+	(*nd)->diR.setNear(0);
+	(*nd)->diR.setFar(0);
+
+	if (begin == end)
+		return;
+
+	auto near = std::numeric_limits<float>::max();
+	auto far = 0.0;
+	for (auto p = begin; p != median; p++){
+		if ((*p)->sstemp < near)
+			near = (*p)->sstemp;
+		if ((*p)->sstemp > far)
+			far = (*p)->sstemp;
 	}
-	else{
-		auto near = std::numeric_limits<float>::max();
-		auto far = 0.0;
-		for (auto p = begin; p != median; p++){
-			if ((*p)->sstemp < near)
-				near = (*p)->sstemp;
-			if ((*p)->sstemp > far)
-				far = (*p)->sstemp;
-		}
-		(*nd)->diL.setNear(near);
-		(*nd)->diL.setFar(far);
-		// And same for RHS child node:
-		near = std::numeric_limits<float>::max();
-		far = 0.0;
-		for (auto p = median; p != end; p++){
-			if ((*p)->sstemp < near)
-				near = (*p)->sstemp;
-			if ((*p)->sstemp > far)
-				far = (*p)->sstemp;
-		}
-		(*nd)->diR.setNear(near);
-		(*nd)->diR.setFar(far);
+	(*nd)->diL.setNear(near);
+	(*nd)->diL.setFar(far);
+	// And same for RHS child node:
+	near = std::numeric_limits<float>::max();
+	far = 0.0;
+	for (auto p = median; p != end; p++){
+		if ((*p)->sstemp < near)
+			near = (*p)->sstemp;
+		if ((*p)->sstemp > far)
+			far = (*p)->sstemp;
 	}
+	(*nd)->diR.setNear(near);
+	(*nd)->diR.setFar(far);
 }
 
 /*
@@ -193,7 +192,6 @@ void APMTree<T, M>::search(RadiusQuery<T>& q) {
 
 template <typename T, typename M>
 void APMTree<T, M>::search(NearestKQuery<T>& q) {
-  
   if (this->root != nullptr) {
     PQType queue;
     auto dist = this->metric.distance(&(q.getTarget()), this->root->object);
@@ -201,7 +199,7 @@ void APMTree<T, M>::search(NearestKQuery<T>& q) {
   	this->perfStats.incDistanceCalls();
 	auto pd = pruningDistance<double>(dist, this->root->diL.getNear(), this->root->diR.getFar());
     queue.push(queue.newNode(this->root, nullptr, dist, pd));
-    searchK(queue, q.getTarget(), q, this->metric);
+	searchK(queue, q.getTarget(), q, this->metric);
   }
 }
 
@@ -217,14 +215,12 @@ void APMTree<T, M >::searchCollect(SimilarityQuery<T>& q) {
 //KNN search implementation.
 template <typename T, typename M>
 void APMTree<T, M >::searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, M& met) {
-	std::cout <<"This function is not finished and  tested" << std::endl; 
-	std::exit(-1);
 	while (!pq.empty()) {
 		PQNodePtr qn = pq.top();
 		pq.pop();
-		sq.addResult(qn->node->object, qn->distance);	
+		auto tnd = qn->node; // tree node
+		sq.addResult(tnd->object, qn->distance);	
 		if(qn->pruningDist <= sq.searchRadius()) {
-			auto tnd = qn->node; // tree node
 			auto pqDist = qn->distance;
 			auto lnd = tnd->left;
 			auto rnd = tnd->right;
@@ -233,18 +229,22 @@ void APMTree<T, M >::searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, 
 					this->perfStats.incNodesVisited();
 					auto dist = met.distance(&target, lnd->object);
 					this->perfStats.incDistanceCalls();
-					auto pd = pruningDistance<double>(dist,  lnd->diL.getNear(),  lnd->diR.getFar());
+					auto pd = pruningDistance<double>(dist, 
+								 std::min(lnd->diL.getNear(),  lnd->diR.getNear()), 
+								 std::max(lnd->diL.getFar(),   lnd->diR.getFar()));
 					pq.push(pq.newNode(lnd, qn, dist, pd));
-				}
+			}
 			}
 			if (rnd != nullptr) {
 				if (pqDist >= tnd->diR.getNear() - sq.searchRadius()){
-			   	this->perfStats.incNodesVisited();
-				auto dist = met.distance(&target, rnd->object);
-			    this->perfStats.incDistanceCalls();
-				auto pd = pruningDistance<double>(dist,  rnd->diL.getNear(), rnd->diR.getFar());
-				pq.push(pq.newNode(rnd, qn, dist, pd));
-			}
+					this->perfStats.incNodesVisited();
+					auto dist = met.distance(&target, rnd->object);
+					this->perfStats.incDistanceCalls();
+					auto pd = pruningDistance<double>(dist,
+													  std::min(rnd->diL.getNear(), rnd->diR.getNear()),
+													  std::max(rnd->diL.getFar(), rnd->diR.getFar()));
+					pq.push(pq.newNode(rnd, qn, dist, pd));
+				}
 		}
 	}
 	}

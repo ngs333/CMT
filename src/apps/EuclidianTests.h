@@ -334,7 +334,7 @@ void nkSearchTestEM(const std::string &fileNamePrefix){
 		
 	std::vector<int> cmt_madis {1,1000};
 	std::vector<int> spmt_madis{0};
-	std::vector<int> apmt_madis; // not finished {0};
+	std::vector<int> apmt_madis{0}; // not finished {0};
 
 
 	std::set<PivotType> includePivotTypes{PivotType::RAN};
@@ -785,7 +785,9 @@ void kNNSearchCompareEM(unsigned int nPoints, unsigned int nQueries,
 
 
 	std::clock_t start = std::clock();
-	CMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, kxBalancedTreeHeight(1, points.size()));
+	//CMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, kxBalancedTreeHeight(1, points.size()));
+	APMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, 0);
+
 	BruteForceSearch<EuclidianPoint, MetricType> stree2(points, met);
 
 	bTime = dTimeSeconds(start);
