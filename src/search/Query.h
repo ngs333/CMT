@@ -200,7 +200,7 @@ public:
 		for (const auto& n : neighbors) {
 			ids.insert(n.id);
 		}
-		for (const auto& n : qB.getNeigbors()) {
+		for (const auto& n : qB.getNeighbors()) {
 			if (ids.find(n.id) == ids.end()) {
 				missing.insert(n);
 			}

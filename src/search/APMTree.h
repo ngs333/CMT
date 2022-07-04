@@ -34,14 +34,15 @@
 #include "DistanceInterval.h"
 #include "SearchPQ.h"
 #include "SPMTree.h"
+#include "PartitionFunction.h"
 
 template < typename T, typename M>
 class APMTree : public  SPMTree_Base<ANode<T>, T, M> {
-	protected:
+protected:
 	const std::string myShortName{ "APMT" };
 	using Node = ANode<T>;  
 	using NodePtr = Node*;
-	using NodeItr = typename std::vector<APMTree<T, M>::Node*>::iterator;
+	using NodeItr = typename std::vector<Node*>::iterator;
 	using PQNode = SPQNode<Node>;
 	using PQNodePtr = PQNode*;
 	//Comparator for the priority queue
@@ -57,19 +58,21 @@ class APMTree : public  SPMTree_Base<ANode<T>, T, M> {
 	void searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, M& met);
 	void searchR(NodePtr& nd, const T & target, RadiusQuery<T> & sq, M & met);
 	void searchCollect(NodePtr& nd, const T& target, SimilarityQuery<T>& sq, M& met);
-	void collect(NodePtr& nd, SimilarityQuery<T>& sq, M& met, const double dist);
+	//void collect(NodePtr& nd, SimilarityQuery<T>& sq, M& met, const double dist);
 	Node* buildTreeAlt(const NodeItr begin, const NodeItr end);
 	void partition(const NodeItr firstC, NodeItr& median, const NodeItr end);
 	void radiusSumAndDepths(NodePtr& nd, unsigned int depth, double& dsum, std::set<unsigned int>& depths);
 	void calculateDI(NodeItr ndPtr, const NodeItr begin,  const NodeItr median, const NodeItr end);
+	PartitionFunction<Node,NodeItr,T,M>* pFunction;
+
 public:
 	APMTree(std::vector < T >& objects, const M& met,
 		PivotType pivT = PivotType::RAN, PartType partT = PartType::BOM, const unsigned int madi = 0) :
 	      SPMTree_Base<ANode<T>, T, M>::SPMTree_Base(objects, met, pivT, partT) {
-	std::cout << "APMTree buildTree starting" << std::endl;
-	this->root = this->buildTreeAlt(this->nodes.begin(), this->nodes.end());
-	std::cout << "APMTree buildTree finished" << std::endl;
-
+		std::cout << "APMTree buildTree starting" << std::endl;
+		this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( this->partitionType );
+		this->root = this->buildTreeAlt(this->nodes.begin(), this->nodes.end());
+		std::cout << "APMTree buildTree finished" << std::endl;
 	}
 
 	void searchCollect(SimilarityQuery<T> & q);	
@@ -78,6 +81,8 @@ public:
 	double radiusSumAndDepths(std::set<unsigned int>& depths);
 
 	std::string shortName() const { return myShortName; }
+
+
 
 };
 
@@ -114,7 +119,8 @@ APMTree<T, M>::buildTreeAlt(const NodeItr begin, const NodeItr end)
 		(*itr)->sstemp = this->metric.distance((*begin)->object, (*itr)->object);
 	}
 
-	this->partition(firstC, median, end);
+	//this->partition(firstC, median, end);
+	(*pFunction)(firstC, median, end);
 
 	this->calculateDI(begin, firstC, median, end);
 
@@ -147,8 +153,8 @@ if (this->partitionType == PartType::BOM) {
 	in the value far.
 */
 template <typename T, typename M>
-void APMTree<T, M>::calculateDI(const NodeItr nd, const NodeItr begin, const NodeItr median, const NodeItr end)
-{
+void APMTree<T, M>::calculateDI(const NodeItr nd, const NodeItr begin, 
+	const NodeItr median, const NodeItr end){
 	(*nd)->diL.setNear(0);
 	(*nd)->diL.setFar(0);
 	(*nd)->diR.setNear(0);
@@ -156,28 +162,9 @@ void APMTree<T, M>::calculateDI(const NodeItr nd, const NodeItr begin, const Nod
 
 	if (begin == end)
 		return;
-
-	auto near = std::numeric_limits<float>::max();
-	auto far = 0.0;
-	for (auto p = begin; p != median; p++){
-		if ((*p)->sstemp < near)
-			near = (*p)->sstemp;
-		if ((*p)->sstemp > far)
-			far = (*p)->sstemp;
-	}
-	(*nd)->diL.setNear(near);
-	(*nd)->diL.setFar(far);
-	// And same for RHS child node:
-	near = std::numeric_limits<float>::max();
-	far = 0.0;
-	for (auto p = median; p != end; p++){
-		if ((*p)->sstemp < near)
-			near = (*p)->sstemp;
-		if ((*p)->sstemp > far)
-			far = (*p)->sstemp;
-	}
-	(*nd)->diR.setNear(near);
-	(*nd)->diR.setFar(far);
+	LessThanTemp<Node> cf;
+	calculateDBI<Node,NodeItr> ( (*nd)->diL, begin, median, cf);
+	calculateDBI<Node,NodeItr> ( (*nd)->diR, median, end, cf);
 }
 
 /*
@@ -229,24 +216,20 @@ void APMTree<T, M >::searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, 
 					this->perfStats.incNodesVisited();
 					auto dist = met.distance(&target, lnd->object);
 					this->perfStats.incDistanceCalls();
-					auto pd = pruningDistance<double>(dist, 
-								 std::min(lnd->diL.getNear(),  lnd->diR.getNear()), 
-								 std::max(lnd->diL.getFar(),   lnd->diR.getFar()));
+					auto pd = pruningDistance<double>(dist, lnd->getNear(), lnd->getFar());
 					pq.push(pq.newNode(lnd, qn, dist, pd));
-			}
+				}
 			}
 			if (rnd != nullptr) {
 				if (pqDist >= tnd->diR.getNear() - sq.searchRadius()){
 					this->perfStats.incNodesVisited();
 					auto dist = met.distance(&target, rnd->object);
 					this->perfStats.incDistanceCalls();
-					auto pd = pruningDistance<double>(dist,
-													  std::min(rnd->diL.getNear(), rnd->diR.getNear()),
-													  std::max(rnd->diL.getFar(), rnd->diR.getFar()));
+					auto pd = pruningDistance<double>(dist, rnd->getNear(), rnd->getFar());
 					pq.push(pq.newNode(rnd, qn, dist, pd));
 				}
+			}
 		}
-	}
 	}
 }
 
@@ -270,12 +253,9 @@ template <typename T, typename M>
 void APMTree<T, M>::searchR(NodePtr& nd, const T& target, RadiusQuery<T>& sq, M& met) {
  	if (nd == nullptr)
 		return;
-  	
 	this->perfStats.incNodesVisited();
-
  	auto dist = met.distance(&target, nd->object);
  	this->perfStats.incDistanceCalls();
-
   	sq.addResult(nd->object, dist);
 
 	if (nd->left != nullptr){
@@ -292,31 +272,30 @@ void APMTree<T, M>::searchR(NodePtr& nd, const T& target, RadiusQuery<T>& sq, M&
 
 template <typename T, typename M>
 void APMTree<T, M >::searchCollect(NodePtr& nd, const T& target, SimilarityQuery<T>& sq, M& met) {
-	std::cout <<"This function is not finished and  tested" << std::endl; 
-	std::exit(-1);
 	if (nd == nullptr) return;
 		
 	this->perfStats.incNodesVisited();
 	auto dist = met.distance(&target, nd->object);
 	this->perfStats.incDistanceCalls();
 
-	if(dist + nd->diR.getFar() <=  sq.searchRadius()){
-		collect(nd, sq, met, dist + nd->diR.getFar() );
+	auto fd = nd->getFar();
+	if(dist + fd <=  sq.searchRadius()){
+		this->collect(nd, sq, met, dist + fd );
 	}else{
 		sq.addResult(nd->object, dist);
-		auto pd = pruningDistance<double>(dist, nd->diR.getNear(), nd->diR.getFar());
-		if (pd <= sq.searchRadius()) {
+	//	auto pd = pruningDistance<double>(dist, nd->diL.getNear(), nd->diR.getFar());
+	//	if (pd <= sq.searchRadius()) {
 			if (nd->left != nullptr){
 				if (dist <= nd->diL.getFar() + sq.searchRadius()){
-						searchCollect(nd->left, target, sq, met);
+					searchCollect(nd->left, target, sq, met);
 				}
 			}
 			if (nd->right != nullptr){
 	  			if (dist >= nd->diR.getNear() - sq.searchRadius()){
-						searchCollect(nd->right, target, sq, met);
+					searchCollect(nd->right, target, sq, met);
 				}	
 			}
-		}
+	//	}
 	}
 	return;
 }

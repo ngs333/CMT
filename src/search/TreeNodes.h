@@ -23,7 +23,8 @@ public:
 	int size;
 	FSVector<DI> adi;//the ancestral distance interrval
 	//std::vector<DI> adi;
-	DistanceInterval<float>    di; //Normal child distance interval
+	DistanceInterval<float>    diL, diR; //Normal child distance intervals
+
 	//std::vector<float> dpivots;//Note that sizeof(std::vector<float>) =24 bytes on a 64 bit Windows 
 	std::deque<float> dpivots; //TODO: fix above
 	float sstemp;
@@ -32,9 +33,23 @@ public:
 	bool isLeaf() { return ((left == nullptr) && (right == nullptr)); }
 	void setLeaf() {
 		left = nullptr;  right = nullptr;
-		di.setNear(0); di.setFar(0);
+		diL.setNear(0); diL.setFar(0); diR.setNear(0); diR.setFar(0);
 	}
-
+	float getNear(){
+		if (left != nullptr){
+			return diL.getNear();
+		}else{
+			return diR.getNear();
+		}
+	}
+	// get the furthest from among both left and right.	
+	float getFar(){
+		if (right != nullptr){
+			return diR.getFar();
+		}else{
+			return diL.getFar();
+		}
+	}
 	friend std::ostream& operator<<(std::ostream& os, CNode& nd) {
 		os << "(" << nd.object << ")";
 		return os;
@@ -69,6 +84,22 @@ public:
 	ANode(T* object) : object{ object } {}
 	bool isLeaf() { return ((left == nullptr) && (right == nullptr)); }
 	void setLeaf() { left = nullptr;  right = nullptr; }
+	// get the nearest from among both left and right.
+	float getNear(){
+		if (left != nullptr){
+			return diL.getNear();
+		}else{
+			return diR.getNear();
+		}
+	}
+	// get the furthest from among both left and right.	
+	float getFar(){
+		if (right != nullptr){
+			return diR.getFar();
+		}else{
+			return diL.getFar();
+		}
+	}
 };
 
 /**

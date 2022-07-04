@@ -32,11 +32,11 @@ namespace PerfStatsNS {
 	CENT => center
 */
 enum class PivotType { RAN};//Random, Extreme, MINIMUM, median, center, N/4
-enum class PartType {BOM};
+enum class PartType {BOM, DMR};
 
 static std::map<PivotType, std::string> pivotTypeMap{ {PivotType::RAN, "RAN"} };
 
-static std::map<PartType, std::string> partTypeMap{ {PartType::BOM, "BOM"}};
+static std::map<PartType, std::string> partTypeMap{ {PartType::BOM, "BOM"}, {PartType::DMR, "DMR"}};
 
 std::ostream& operator<<(std::ostream& os, PivotType p) {
 	os << pivotTypeMap.at(p);
