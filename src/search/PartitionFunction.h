@@ -54,6 +54,8 @@ PartitionFunction<N,NodeItr,T,M> * getPartitionFunctor(PartType pType){
       ftor = new BOM<N,NodeItr,T,M>();
     }else if(pType == PartType::DMR){
       ftor = new DMR<N,NodeItr,T,M>();
+    }else if(pType == PartType::EXT){
+      ftor = new BOM<N,NodeItr,T,M>();
     }else{
       std::cout <<"Error in getPartitionFunctor"<<std::endl;
       exit(-1);
@@ -78,9 +80,9 @@ inline std::tuple<T,T> getNearFar( const NodeItr begin, const NodeItr end, Compa
 */
 template <class Node, class NodeItr, class Comparator>
 inline void calculateDBI(DI & di, const NodeItr begin, const NodeItr end, Comparator& compare){
-  auto [nearL, farL] = getNearFar<float, Node, NodeItr>(begin, end, compare);
-  di.setNear(nearL);
-  di.setFar(farL);
+  auto [near, far] = getNearFar<float, Node, NodeItr>(begin, end, compare);
+  di.setNear(near);
+  di.setFar(far);
 }
 
 #endif
