@@ -61,6 +61,7 @@ protected:
 	NodePtr root;
 	std::vector < NodePtr> nodes;
 	//std::vector < Node> nodeMemory;
+	NodePtr buildTreePiv(const NodeItr begin, const NodeItr end);
 	NodePtr buildTreeAlt(const NodeItr begin, const NodeItr end);
 
 	auto moveOverlap(const NodeItr begin, const NodeItr median, const NodeItr end);
@@ -237,14 +238,13 @@ void CMTree_Base < N, T, M >::computeADIVec(const NodeItr begin, const NodeItr e
 }
 
 /**
-buildTreeAlt()allows for the selection of different pivot selection and partitioning algorithms in 
-building the tree; the methods are to be specified inthe constructor.
-At time of writing there is no universal "best" set of partitioning and pivot selection
-methods, and this routine allows for experimentation with so far..
+buildTreePiv() tree building algorithm where the distances for partitioning are calculated relative
+to the pivot. The combinations of PivotType/PartType that is suppoerted here includes these six:
+[RAN,CEN,EXT]/[BOM,DMR].
 **/
 template < typename N, typename T, typename M>
 typename CMTree_Base <N, T, M>::Node*
-CMTree_Base < N, T, M >::buildTreeAlt(const NodeItr begin, const NodeItr end) {
+CMTree_Base < N, T, M >::buildTreePiv(const NodeItr begin, const NodeItr end) {
 	int size = 	end - begin;
 
 	if (size == 0) { 
@@ -270,8 +270,63 @@ CMTree_Base < N, T, M >::buildTreeAlt(const NodeItr begin, const NodeItr end) {
 		(*itr)->sstemp = dist;
 	}
 
-	//partition(firstC, median, end);
 	(*pFunction)(firstC, median, end);
+
+	calculateDI(begin, firstC, median, end);
+
+	(*begin)->left = buildTreePiv(firstC, median);
+	(*begin)->right = buildTreePiv(median, end);
+
+	computeADIVec(begin, end);
+	return *begin;
+}
+
+/**
+buildTreeAlt() is the tree building algorithm where the distances for partitioning are 
+relative to an object (an Alternative) that is not pivot. The PivotType/PartType 
+combination(s) suppported here is: [CENT/EXT]. Not that in the partitioing step,
+DMR is used once distances are calculated relative to the extrema.
+**/
+template < typename N, typename T, typename M>
+typename CMTree_Base <N, T, M>::Node*
+CMTree_Base < N, T, M >::buildTreeAlt(const NodeItr begin, const NodeItr end) {
+	int size = 	end - begin;
+
+	if (size == 0) { 
+		return nullptr; 
+	}else if (size == 1) {
+		(*begin)->setLeaf();
+		computeADIVec(begin, end);
+		return *begin;
+	}
+
+	const NodeItr firstC = begin + 1; //iterator pointing to first child
+	NodeItr median = firstC + (end - firstC) / 2; //median of the children
+
+	//Set the central point as pivot
+	LessThanLen<N> ltlf;
+	auto pivotItr = selectPivot<T, M, NodeItr, LessThanLen<N>>(begin, median, end, pivotType, ltlf, metric);
+	std::iter_swap(begin, pivotItr);
+	(*begin)->size= size;
+
+	//Find an extrema among [fristC, end)]
+	auto extItr = findExtrema<T, NodeItr>(firstC, end, metric);
+	//Set distances to the extrema
+	for (auto itr = firstC; itr != end; itr++) {
+		auto dist = metric.distance((*extItr)->object, (*itr)->object);
+		(*itr)->sstemp = dist;
+	}
+	//partition by those distances
+	//For EXT, the partition function was set tp BOM or DMR
+	(*pFunction)(firstC, median, end);
+
+	//Now calc and set distances to the pivot.
+	//Note that the distance to tree root is stored at dpivots[0] for any node.
+	for (auto itr = firstC; itr != end; itr++) {
+		auto dist = metric.distance((*begin)->object, (*itr)->object);
+		(*itr)->dpivots.push_back(dist);
+		(*itr)->sstemp = dist;
+	}
 
 	calculateDI(begin, firstC, median, end);
 
@@ -634,9 +689,14 @@ public:
 	
 		std::cout << "Starting CMTree::buildTree() piV parT Nobjects:" << 
 		this->pivotType << " " << this->partitionType << " " << objects.size() << std::endl;
-		// 
-		this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( this->partitionType );
-		this->root = this->buildTreeAlt(this->nodes.begin(), this->nodes.end());
+		//
+		if( (pivT == PivotType::CENT) && (partT==PartType::EXT)){
+			this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( PartType::DMR );
+			this->root = this->buildTreeAlt(this->nodes.begin(), this->nodes.end());
+		} else{
+			this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( this->partitionType );
+			this->root = this->buildTreePiv(this->nodes.begin(), this->nodes.end());
+		}
 
 		this->freePivDistances (this->root);
 	

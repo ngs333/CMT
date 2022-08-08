@@ -213,10 +213,10 @@ void radiusSearchTestEM_S(const std::string& fileNamePrefix) {
 	//std::vector<float>  radii { 0.000001f};
 	//std::vector<float>  radii {0.5}
 
-	std::map<unsigned int, unsigned int> nofPoints{ {100000,1000}};
+	std::map<unsigned int, unsigned int> nofPoints{ {10000,100}};
 	std::vector<float>  radii {0.0f, 0.000001f, 0.5f, 1.0f, 2.0f};
 
-	std::vector<int> cmt_madis{1 , 1000};//,1};
+	std::vector<int> cmt_madis;//{1 , 1000};//,1};
 	std::vector<int> spmt_madis{0};
 	std::vector<int> apmt_madis{0};
 
@@ -659,15 +659,21 @@ void collectSearchTestEMAutoRad(const std::string& fileNamePrefix, int nrad, flo
 	//std::map<unsigned int, unsigned int> nofPoints{{10000,100 } ,{100000,100 } , {1000000,100 }};
 	//std::map<unsigned int, unsigned int> nofPoints{{10000000,100 }};
 	std::map<unsigned int, unsigned int> nofPoints{{100000,100 }};
-    std::vector<float> radii;
+	std::vector<float> radii;
 	bool rangeSearchToo = true;
 	
 
-	std::set<PivotType> includePivotTypes{ PivotType::RAN}; 
-	std::set<PartType>  includePartTypes{ PartType::BOM, PartType::DMR  };
+	std::set<PivotType> includePivotTypes{ PivotType::RAN, PivotType::EXT, PivotType::CENT}; 
+	std::set<PartType>  includePartTypes{ PartType::BOM, PartType::DMR};
+
+	//std::set<PivotType> includePivotTypes{  PivotType::CENT}; 
+	//std::set<PartType>  includePartTypes{ PartType::EXT};
+
+	//std::set<PivotType> includePivotTypes{  PivotType::RAN}; 
+	//std::set<PartType>  includePartTypes{ PartType::BOM};
 
 	std::vector<int> cmt_madis{1,1000}; // {1};
-	std::vector<int> spmt_madis{0};// {0};
+	std::vector<int> spmt_madis;//{0};//{0};// {0};
 	std::vector<int> apmt_madis{0};// {0};
 
 
@@ -685,6 +691,7 @@ void collectSearchTestEMAutoRad(const std::string& fileNamePrefix, int nrad, flo
 		float delta = 3.0 / nrad;
 
 		radii.clear();
+		//for (int i = 0; i <= 10; i++){ //TEST
 		for (int i = 0; i <= nrad; i++){
 			radii.push_back(i * delta * maxDist);
 		}
@@ -699,6 +706,11 @@ void collectSearchTestEMAutoRad(const std::string& fileNamePrefix, int nrad, flo
 				}
 				for (const auto& madi : apmt_madis){
 					collectSearchTest<EuclidianPoint, EuclidianMetric,APMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag, rangeSearchToo);
+					{hflag = false;}
+				}
+				for (const auto& madi : spmt_madis){
+					collectSearchTest<EuclidianPoint, EuclidianMetric,SPMTree<EuclidianPoint, EuclidianMetric>>
 					(points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag, rangeSearchToo);
 					{hflag = false;}
 				}

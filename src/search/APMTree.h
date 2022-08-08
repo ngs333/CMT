@@ -59,6 +59,7 @@ protected:
 	void searchR(NodePtr& nd, const T & target, RadiusQuery<T> & sq, M & met);
 	void searchCollect(NodePtr& nd, const T& target, SimilarityQuery<T>& sq, M& met);
 	//void collect(NodePtr& nd, SimilarityQuery<T>& sq, M& met, const double dist);
+	Node* buildTreePiv(const NodeItr begin, const NodeItr end);
 	Node* buildTreeAlt(const NodeItr begin, const NodeItr end);
 	void partition(const NodeItr firstC, NodeItr& median, const NodeItr end);
 	void radiusSumAndDepths(NodePtr& nd, unsigned int depth, double& dsum, std::set<unsigned int>& depths);
@@ -70,8 +71,13 @@ public:
 		PivotType pivT = PivotType::RAN, PartType partT = PartType::BOM, const unsigned int madi = 0) :
 	      SPMTree_Base<ANode<T>, T, M>::SPMTree_Base(objects, met, pivT, partT) {
 		std::cout << "APMTree buildTree starting" << std::endl;
-		this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( this->partitionType );
-		this->root = this->buildTreeAlt(this->nodes.begin(), this->nodes.end());
+		if( (pivT == PivotType::CENT) && (partT==PartType::EXT)){
+			this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( PartType::DMR );
+			this->root = this->buildTreeAlt(this->nodes.begin(), this->nodes.end());
+		} else{
+			this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( this->partitionType );
+			this->root = this->buildTreePiv(this->nodes.begin(), this->nodes.end());
+		}
 		std::cout << "APMTree buildTree finished" << std::endl;
 	}
 
@@ -87,11 +93,55 @@ public:
 };
 
 /**
-buildTreeAlt() is the an alternaltive tree building algorithm allows for the selection of different
-pivot selection and partitioning algorithms  - mostly for experimental purposes. The other buildTree
-algorithms are mostly "fixed" in selection and partitioning algorithms.
+buildTreePiv() tree building algorithm where the distances for partitioning are calculated relative
+to the pivot. The combinations of PivotType/PartType that is suppoerted here includes these six:
+[RAN,CEN,EXT]/[BOM,DMR].
 **/
 
+template <typename T, typename M>
+typename APMTree<T, M>::Node *
+APMTree<T, M>::buildTreePiv(const NodeItr begin, const NodeItr end)
+{
+	if (begin == end){
+		return nullptr;
+	}
+	int size =end - begin;
+
+	if ( size == 1){
+		(*begin)->setLeaf();
+		return *begin;
+	}
+
+	const auto firstC = begin + 1;			   // iterator pointing to first child
+	auto median = firstC + (end - firstC) / 2; // median of the children
+
+	LessThanLen<Node> ltl;
+	auto pivotItr = selectPivot<T, M, NodeItr, LessThanLen<Node>>(begin, median, end,
+												this->pivotType, ltl, this->metric);
+	std::iter_swap(begin, pivotItr);
+	(*begin)->size= size;
+
+	for (auto itr = firstC; itr != end; itr++){
+		(*itr)->sstemp = this->metric.distance((*begin)->object, (*itr)->object);
+	}
+
+	(*pFunction)(firstC, median, end);
+
+	this->calculateDI(begin, firstC, median, end);
+
+	(*begin)->left = this->buildTreePiv(firstC, median);
+	(*begin)->right = this->buildTreePiv(median, end);
+
+	return *begin;
+}
+
+
+/**
+buildTreeAlt() is the tree building algorithm where the distances for partitioning are 
+relative to an object (an Alternative) that is not pivot. The PivotType/PartType 
+combination(s) suppported here is: [CENT/EXT]. Not that in the partitioing step,
+DMR is used once distances are calculated relative to the extrema.
+**/
 template <typename T, typename M>
 typename APMTree<T, M>::Node *
 APMTree<T, M>::buildTreeAlt(const NodeItr begin, const NodeItr end)
@@ -111,16 +161,25 @@ APMTree<T, M>::buildTreeAlt(const NodeItr begin, const NodeItr end)
 
 	LessThanLen<Node> ltl;
 	auto pivotItr = selectPivot<T, M, NodeItr, LessThanLen<Node>>(begin, median, end,
-																  this->pivotType, ltl, this->metric);
+												this->pivotType, ltl, this->metric);
 	std::iter_swap(begin, pivotItr);
 	(*begin)->size= size;
 
+	//Find an extrema among [fristC, end)]
+	auto extItr = findExtrema<T, NodeItr>(firstC, end, this->metric);
+	//Set distances to the extrema
+	for (auto itr = firstC; itr != end; itr++) {
+		(*itr)->sstemp  = this->metric.distance((*extItr)->object, (*itr)->object);
+	}
+	//partition by those distances
+	//For EXT, the partition function was set tp BOM or DMR
+	(*pFunction)(firstC, median, end);
+
+	//Now calc and set distances to the pivot.
+	//Note that the distance to tree root is stored at dpivots[0] for any node.
 	for (auto itr = firstC; itr != end; itr++){
 		(*itr)->sstemp = this->metric.distance((*begin)->object, (*itr)->object);
 	}
-
-	//this->partition(firstC, median, end);
-	(*pFunction)(firstC, median, end);
 
 	this->calculateDI(begin, firstC, median, end);
 
@@ -130,22 +189,6 @@ APMTree<T, M>::buildTreeAlt(const NodeItr begin, const NodeItr end)
 	return *begin;
 }
 
-/*
-	Partiton the set in interval [fistC,end) based upon the user selected PartitioningType.
-	Note: far is set hold a temp value for patitioning but it is not set back.
-*/
-template <typename T, typename M>
-void APMTree<T, M >::partition(const NodeItr firstC, NodeItr& median, const NodeItr end) {
-if (this->partitionType == PartType::BOM) {
-		//Balanced (|LHS|=|RHS|) Object Median Partition.
-		std::nth_element(firstC, median, end, LessThanTemp<Node>());
-	}
-	else {
-		error("partition function default");
-	}
-}
-
-/*
 
 /*
 	Find and store the bounding intervals of te left and right child. 
@@ -287,8 +330,8 @@ void APMTree<T, M >::searchCollect(NodePtr& nd, const T& target, SimilarityQuery
         if (nd->left != nullptr) {
            	// if (nd->rangeOverlapsLeft(dist, sq.searchRadius())) {
             // if (dist <= nd->diL.getFar() + sq.searchRadius()){
- 			if (nd->diL.rangeOverlaps(dist, sq.searchRadius())) {
-                searchCollect(nd->left, target, sq, met);
+	  if (nd->diL.rangeOverlaps(dist, sq.searchRadius())) {
+	    searchCollect(nd->left, target, sq, met);
             }
         }
         if (nd->right != nullptr) {
@@ -322,7 +365,7 @@ void APMTree<T, M >::radiusSumAndDepths(NodePtr& nd,  unsigned int depth, double
 		return;
 	}
 	//if (di.size() > 0)
-	dsum += nd->diR.getFar();
+	dsum += nd->getFar();
 	if (nd->left != nullptr)
 		radiusSumAndDepths(nd->left, depth + 1, dsum, depths);
 	if (nd->right != nullptr)
