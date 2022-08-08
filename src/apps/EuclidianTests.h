@@ -295,6 +295,7 @@ void radiusSearchTestEM_Brin95(const std::string& fileNamePrefix) {
 
 	std::vector<int> cmt_madis{1};
 	std::vector<int> spmt_madis{0};
+	std::vector<int> apmt_madis{0};
 
 	std::set<PivotType> includePivotTypes{ PivotType::RAN};
 	std::set<PartType>  includePartTypes{ PartType::BOM };
@@ -314,6 +315,11 @@ void radiusSearchTestEM_Brin95(const std::string& fileNamePrefix) {
 				}
 				for (const auto& madi : spmt_madis){
 					radiusSearchTest<EuclidianPoint, EuclidianMetric,SPMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+				for (const auto& madi : apmt_madis){
+					radiusSearchTest<EuclidianPoint, EuclidianMetric,APMTree<EuclidianPoint, EuclidianMetric>>
 					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
 					hflag = false; //Dont print header after 1st time.
 				}
@@ -649,9 +655,10 @@ void collectSearchTestEM(const std::string& fileNamePrefix) {
 
 */
 void collectSearchTestEMAutoRad(const std::string& fileNamePrefix, int nrad, float maxRadPct) {
-	std::map<unsigned int, unsigned int> nofPoints{{10000,100 } ,{100000,100 } , {1000000,100 } , {10000000,100 }};
+	//std::map<unsigned int, unsigned int> nofPoints{{10000,100 } ,{100000,100 } , {1000000,100 } , {10000000,100 }};
 	//std::map<unsigned int, unsigned int> nofPoints{{10000,100 } ,{100000,100 } , {1000000,100 }};
 	//std::map<unsigned int, unsigned int> nofPoints{{10000000,100 }};
+	std::map<unsigned int, unsigned int> nofPoints{{100000,100 }};
     std::vector<float> radii;
 	bool rangeSearchToo = true;
 	

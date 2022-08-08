@@ -155,10 +155,8 @@ if (this->partitionType == PartType::BOM) {
 template <typename T, typename M>
 void APMTree<T, M>::calculateDI(const NodeItr nd, const NodeItr begin, 
 	const NodeItr median, const NodeItr end){
-	(*nd)->diL.setNear(0);
-	(*nd)->diL.setFar(0);
-	(*nd)->diR.setNear(0);
-	(*nd)->diR.setFar(0);
+	(*nd)->diL.reset();
+	(*nd)->diR.reset();
 
 	if (begin == end)
 		return;
@@ -184,7 +182,7 @@ void APMTree<T, M>::search(NearestKQuery<T>& q) {
     auto dist = this->metric.distance(&(q.getTarget()), this->root->object);
 	 this->perfStats.incNodesVisited();
   	this->perfStats.incDistanceCalls();
-	auto pd = pruningDistance<double>(dist, this->root->diL.getNear(), this->root->diR.getFar());
+	auto pd = pruningDistance<double>(dist, 0, 1.0e30);
     queue.push(queue.newNode(this->root, nullptr, dist, pd));
 	searchK(queue, q.getTarget(), q, this->metric);
   }
@@ -212,7 +210,7 @@ void APMTree<T, M >::searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, 
 			auto lnd = tnd->left;
 			auto rnd = tnd->right;
 			if (lnd != nullptr) {
-				if ( pqDist <= tnd->diL.getFar() + sq.searchRadius())  {
+				if (tnd->diL.rangeOverlaps(pqDist, sq.searchRadius()) == true) {
 					this->perfStats.incNodesVisited();
 					auto dist = met.distance(&target, lnd->object);
 					this->perfStats.incDistanceCalls();
@@ -221,7 +219,7 @@ void APMTree<T, M >::searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, 
 				}
 			}
 			if (rnd != nullptr) {
-				if (pqDist >= tnd->diR.getNear() - sq.searchRadius()){
+				if (tnd->diR.rangeOverlaps(pqDist, sq.searchRadius()) == true){
 					this->perfStats.incNodesVisited();
 					auto dist = met.distance(&target, rnd->object);
 					this->perfStats.incDistanceCalls();
@@ -251,53 +249,55 @@ void APMTree<T, M >::searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, 
 	****/
 template <typename T, typename M>
 void APMTree<T, M>::searchR(NodePtr& nd, const T& target, RadiusQuery<T>& sq, M& met) {
- 	if (nd == nullptr)
-		return;
-	this->perfStats.incNodesVisited();
- 	auto dist = met.distance(&target, nd->object);
- 	this->perfStats.incDistanceCalls();
-  	sq.addResult(nd->object, dist);
+    if (nd == nullptr)
+        return;
+    this->perfStats.incNodesVisited();
+    auto dist = met.distance(&target, nd->object);
+    this->perfStats.incDistanceCalls();
+    sq.addResult(nd->object, dist);
 
-	if (nd->left != nullptr){
-		if (dist <= nd->diL.getFar() + sq.searchRadius()){
-			searchR(nd->left, target, sq, met);
-		}
-  	}
-  	if (nd->right != nullptr){
-	  	if (dist >= nd->diR.getNear() - sq.searchRadius()){
-			  searchR(nd->right, target, sq, met);
-	  	}
-  	}
+    if (nd->left != nullptr) {
+        // if (dist <= nd->diL.getFar() + sq.searchRadius()){
+        //if (nd->rangeOverlapsLeft(dist, sq.searchRadius())) {
+		if (nd->diL.rangeOverlaps(dist, sq.searchRadius())) {	
+            searchR(nd->left, target, sq, met);
+        }
+    }
+
+    if (nd->right != nullptr) {
+        if (nd->diR.rangeOverlaps(dist, sq.searchRadius())) {
+            searchR(nd->right, target, sq, met);
+        }
+    }
 }
 
 template <typename T, typename M>
 void APMTree<T, M >::searchCollect(NodePtr& nd, const T& target, SimilarityQuery<T>& sq, M& met) {
-	if (nd == nullptr) return;
-		
-	this->perfStats.incNodesVisited();
-	auto dist = met.distance(&target, nd->object);
-	this->perfStats.incDistanceCalls();
+    if (nd == nullptr) return;
 
-	auto fd = nd->getFar();
-	if(dist + fd <=  sq.searchRadius()){
-		this->collect(nd, sq, met, dist + fd );
-	}else{
-		sq.addResult(nd->object, dist);
-	//	auto pd = pruningDistance<double>(dist, nd->diL.getNear(), nd->diR.getFar());
-	//	if (pd <= sq.searchRadius()) {
-			if (nd->left != nullptr){
-				if (dist <= nd->diL.getFar() + sq.searchRadius()){
-					searchCollect(nd->left, target, sq, met);
-				}
-			}
-			if (nd->right != nullptr){
-	  			if (dist >= nd->diR.getNear() - sq.searchRadius()){
-					searchCollect(nd->right, target, sq, met);
-				}	
-			}
-	//	}
-	}
-	return;
+    this->perfStats.incNodesVisited();
+    auto dist = met.distance(&target, nd->object);
+    this->perfStats.incDistanceCalls();
+
+    auto fd = nd->getFar();
+    if (dist + fd <= sq.searchRadius()) {
+        this->collect(nd, sq, met, dist + fd);
+    } else {
+        sq.addResult(nd->object, dist);
+        if (nd->left != nullptr) {
+           	// if (nd->rangeOverlapsLeft(dist, sq.searchRadius())) {
+            // if (dist <= nd->diL.getFar() + sq.searchRadius()){
+ 			if (nd->diL.rangeOverlaps(dist, sq.searchRadius())) {
+                searchCollect(nd->left, target, sq, met);
+            }
+        }
+        if (nd->right != nullptr) {
+            if (nd->diR.rangeOverlaps(dist, sq.searchRadius())) {
+                searchCollect(nd->right, target, sq, met);
+            }
+        }
+    }
+    return;
 }
 
 

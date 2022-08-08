@@ -23,7 +23,7 @@ public:
 	int size;
 	FSVector<DI> adi;//the ancestral distance interrval
 	//std::vector<DI> adi;
-	DistanceInterval<float>    diL, diR; //Normal child distance intervals
+	DI   diL, diR; //Normal child distance intervals
 
 	//std::vector<float> dpivots;//Note that sizeof(std::vector<float>) =24 bytes on a 64 bit Windows 
 	std::deque<float> dpivots; //TODO: fix above
@@ -50,6 +50,36 @@ public:
 			return diL.getFar();
 		}
 	}
+
+	/*
+		Return true if the query overlaps the left
+		distace interval (i.e if the distance(p,q) is not too
+		far to the right of the left interval)).
+	*/
+	bool rangeOverlapsLeft( const double pqDistance, const double radius){
+		if(left == nullptr){
+			return false;
+		}else if (pqDistance <= diL.getFar() + radius){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	/*
+		Return true if the query overlaps the right
+		distace interval (i.e if the distance(p,q) is not too
+		far to the left of the right interval)).
+	*/
+	bool rangeOverlapsRight( const double pqDistance, const double radius){
+		if(right == nullptr){
+			return false;
+		}else if (pqDistance + radius >= diR.getNear()){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
 	friend std::ostream& operator<<(std::ostream& os, CNode& nd) {
 		os << "(" << nd.object << ")";
 		return os;
@@ -63,7 +93,7 @@ public:
 	T* object;           // Point or object selected as pivot - one per node.
 	int size;
 	DistanceInterval<float> di; 
-	double sstemp;//Used a temp variable and aslo for sef score after tree is done.
+	float sstemp;//Used a temp variable and aslo for sef score after tree is done.
 	MNode* left;  //I.e. left child, etc.
 	MNode* right;
 	MNode(T* object) : object{ object } {}
@@ -77,8 +107,14 @@ class ANode {
 public:
 	T* object;           // Point or object selected as pivot - one per node.
 	int size;
-    DistanceInterval<float> diL, diR;
-	double sstemp;//Used a temp variable and aslo for sef score after tree is done.
+#ifdef USE_HALF_INTERVALS
+	LeftHDI<float> diL;
+	RightHDI<float> diR;
+#else
+	DI diL, diR;   //Left and right distance intervals, distances relative to pivot.
+#endif
+
+	float sstemp;//Used a temp variable and aslo for sef score after tree is done.
 	ANode* left;  //I.e. left child, etc.
 	ANode* right;
 	ANode(T* object) : object{ object } {}
@@ -100,6 +136,56 @@ public:
 			return diL.getFar();
 		}
 	}
+	 bool rangeOverlaps(const double pqDistance, const double radius) {
+		if (((left != nullptr) && (diL.rangeOverlaps( pqDistance, radius) == true)) ||
+			((right != nullptr) && (diR.rangeOverlaps( pqDistance, radius) == true)))
+			return true;
+		else
+			return false;
+	 }
+
+	/*
+		Return true if the query overlaps the left
+		distace interval (i.e if the distance(p,q) is not too
+		far to the right of the left interval)). Note this
+		coniders the left distance interval di = [near, far] == [0, far]
+	*/
+	/*bool rangeOverlapsLeft( const double pqDistance, const double radius){
+		if(left == nullptr){
+			return false;
+		}else if (pqDistance <= diL.getFar() + radius){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	*/
+	/*
+		Return true if the query overlaps the right
+		distace interval (i.e if the distance(p,q) is not too
+		far to the left of the right interval)).  Note this
+		coniders the right distance interval di = [near, far] == [near, infinity]
+	*/
+	/*
+	bool rangeOverlapsRight( const double pqDistance, const double radius){
+		if(right == nullptr){
+			return false;
+		}else if (pqDistance + radius >= diR.getNear()){
+			return true;
+		}else{
+			return false;
+		}
+    }
+	*/
+
+    bool rangeOverlaps(DistanceInterval<float> & di, const double pqDistance, const double radius) {
+        if ((pqDistance >= di.getNear() - radius) &&
+            (pqDistance <= di.getFar() + radius)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 
 /**

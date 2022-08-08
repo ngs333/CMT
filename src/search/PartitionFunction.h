@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "DistanceInterval.h"
 #include "SearchCommon.h"
 #include "TreeNodes.h"
 
@@ -77,10 +78,20 @@ inline std::tuple<T,T> getNearFar( const NodeItr begin, const NodeItr end, Compa
   node->sstemp variable in the container of nodes, using nodes in [begin,end)
 */
 template <class Node, class NodeItr, class Comparator>
-inline void calculateDBI(DI & di, const NodeItr begin, const NodeItr end, Comparator& compare){
+inline void calculateDBI(DistanceInterval<float> & di, const NodeItr begin, const NodeItr end, Comparator& compare){
   auto [nearL, farL] = getNearFar<float, Node, NodeItr>(begin, end, compare);
   di.setNear(nearL);
   di.setFar(farL);
+}
+template <class Node, class NodeItr, class Comparator>
+inline void calculateDBI(LeftHDI<float> & di, const NodeItr begin, const NodeItr end, Comparator& compare){
+  auto [nearL, farL] = getNearFar<float, Node, NodeItr>(begin, end, compare);
+  di.setFar(farL);
+}
+template <class Node, class NodeItr, class Comparator>
+inline void calculateDBI(RightHDI<float> & di, const NodeItr begin, const NodeItr end, Comparator& compare){
+  auto [nearL, farL] = getNearFar<float, Node, NodeItr>(begin, end, compare);
+  di.setNear(nearL);
 }
 
 #endif
