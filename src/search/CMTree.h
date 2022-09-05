@@ -133,7 +133,6 @@ public:
 	int getMADIorK() { return MADI; }
 
 	std::string shortName() const { return myShortName; }
-
 };
 
 
@@ -171,23 +170,6 @@ CMTree_Base <N, T, M>::CMTree_Base(std::vector < T > & objects, const M& met, Pi
 	return;
 }
 
-/* Repartition to remove overlaps is any.  */
-template < typename N, typename T, typename M>
-auto
-CMTree_Base < N, T, M >::moveOverlap(const NodeItr start, const NodeItr median, const NodeItr end) {
-	auto newMedian = median;
-	if (end - start > 3) {
-		auto countL = std::count_if(start, median, EqualByVal<N>((*median)->sstemp));
-		//If there are any on the LHS with value equal to the median, repartition.
-		if(countL > 0){
-			LessThanVal<N> func((*median)->sstemp);
-			newMedian = std::partition(start, end, func);
-		}
-	}
-	return newMedian;
-}
-
-
 /*
 	Find the near and far member variable values of a node. We asume the distances to parents are stored
 	in the value far.
@@ -195,10 +177,8 @@ CMTree_Base < N, T, M >::moveOverlap(const NodeItr start, const NodeItr median, 
 template < typename N, typename T, typename M>
 void CMTree_Base < N, T, M >::calculateDI(const NodeItr nd, const NodeItr begin, 
 	const NodeItr median, const NodeItr end){
-	(*nd)->diL.setNear(0);
-	(*nd)->diL.setFar(0);
-	(*nd)->diR.setNear(0);
-	(*nd)->diR.setFar(0);
+	(*nd)->diL.reset();
+	(*nd)->diR.reset();
 
 	if (begin == end)
 		return;
@@ -481,20 +461,6 @@ double CMTree_Base < N, T, M >::minCollectionDistance(NodePtr& nd, std::vector <
 	return minCD;
 }
 
-/**
-Return true if the node object plus the distance interval adi is completely inside the query volume.
-pqDist = distance from the node with adi to the Query center.
-radius = the query radius
-**/
-template < typename N, typename T, typename M>
-bool CMTree_Base <N,  T, M >::IntervalInsideQueryVol(double pqDist, double radius, DI& adi) {
-	if (pqDist + adi.getFar() <= radius) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
 
 //Radius (range) search for CMT, without the priority queue
 
@@ -511,12 +477,12 @@ void CMTree_Base < N, T, M >::searchR(NodePtr& nd, T& target, SimilarityQuery<T>
 
 		distStack.push_back(dist);
 		if (nd->left != nullptr){
-			if (dist <= nd->diL.getFar() + sq.searchRadius()){
+			if (nd->diL.rangeOverlaps(dist, sq.searchRadius())){
 				searchR(nd->left, target, sq, met, distStack);
 			}
 		}
 		if (nd->right != nullptr){
-			if (dist >= nd->diR.getNear() - sq.searchRadius()){
+			if (nd->diR.rangeOverlaps(dist, sq.searchRadius())){
 				searchR(nd->right, target, sq, met, distStack);
 			}
 		}
@@ -549,12 +515,12 @@ void CMTree_Base < N, T, M >::searchCollect(NodePtr& nd, T& target, SimilarityQu
 			sq.addResult(nd->object, dist);
 			distStack.push_back(dist);
 			if (nd->left != nullptr){
-				if (dist <= nd->diL.getFar() + sq.searchRadius()){
+				if (nd->diL.rangeOverlaps(dist, sq.searchRadius())){
 					searchCollect(nd->left, target, sq, met, distStack);
 				}
 			}
 			if (nd->right != nullptr){
-	  			if (dist >= nd->diR.getNear() - sq.searchRadius()){
+	  			if (nd->diR.rangeOverlaps(dist, sq.searchRadius())){
 					searchCollect(nd->right, target, sq, met, distStack);
 				}	
 			}

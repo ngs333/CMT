@@ -1,76 +1,66 @@
 //#define SA_USE_STATIC_DI
 
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <thread>
 #include <chrono>
+#include <fstream>
+#include <iostream>
 #include <regex>
+#include <string>
+#include <thread>
+#include <vector>
 
 #include "EditDistanceTests.h"
 
 #ifdef __WIN32
 unsigned int DistanceIntervalSM<float>::used = 0;
-std::vector< DistanceIntervalSM<float>> DistanceIntervalSM<float>::data;
+std::vector<DistanceIntervalSM<float>> DistanceIntervalSM<float>::data;
 #endif
 
 int main(int argc, char* argv[]) {
-	using namespace std;
+    using namespace std;
 
-	string bfn {"/home/mzuniga/data"};
-	string fileNamePrefix = { "mtreeRunTimes_EDM" };
-	string cmFileName{ "checkMetrics.txt" };
-	string sweFileName{ "SWExamples.txt" };
-	string pairsFileName{ "pairsFileName.txt" };
-	string sprotFileName{ bfn + "/UniProt/uniprot_sprot.fasta"};
-	string tremblFileName{ bfn + "/UniProt/TREMBL/uniprot_trembl_500000.fasta" };
-	string uproMammalsFileName{ bfn + "/UniProt/TREMBL/mammals/uniprot_trembl_mammals_500000.fasta" };
-	string influenzaFileName{ bfn + "/HA/influenza.fna" };
-    string haEncodingFileName{ bfn + "/HA/enc_09/ha_enc09.fasta"};
-	string hivDirName{ bfn + "/HIV1" };
-	string pridePrejFileName(bfn + "/text/words.txt");
-	string dictionFileName(bfn + "/dictionary/dic_en_us_gb_au_lcunique.txt");
-			
-	/*   EDIT DISTANCE TESTS */
+    string bfn{"/home/mzuniga/data"};
+    string fileNamePrefix = {"mtreeRunTimes_EDM"};
+    string cmFileName{"checkMetrics.txt"};
+    string sweFileName{"SWExamples.txt"};
+    string pairsFileName{"pairsFileName.txt"};
+    string sprotFileName{bfn + "/UniProt/uniprot_sprot.fasta"};
+    string tremblFileName{bfn + "/UniProt/TREMBL/uniprot_trembl_500000.fasta"};
+    string uproMammalsFileName{bfn + "/UniProt/TREMBL/mammals/uniprot_trembl_mammals_500000.fasta"};
+    string influenzaFileName{bfn + "/HA/influenza.fna"};
+    string haEncodingFileName{bfn + "/HA/enc_09/ha_enc09.fasta"};
+    string hivDirName{bfn + "/HIV1"};
+    string pridePrejFileName(bfn + "/text/words.txt");
+    string dictionFileName(bfn + "/dictionary/dic_en_us_gb_au_lcunique.txt");
 
-	//RADIUS (RANGE) SEARCH TESTS
-	//radiusSearchTestEDM(fileNamePrefix , dictionFileName);
-	//radiusSearchTestEDM_S(fileNamePrefix +"_sp_mo1_", sprotFileName);
-	//radiusSearchTestEDM_S(fileNamePrefix + "_sprot_radius", sprotFileName);
+    /*   EDIT DISTANCE TESTS */
 
+    // RADIUS (RANGE) SEARCH TESTS
+    // radiusSearchTestEDM(fileNamePrefix , dictionFileName);
+    //radiusSearchTestEDM(fileNamePrefix + "_sp", sprotFileName);
+    // radiusSearchTestEDM_S(fileNamePrefix + "_sprot_radius", sprotFileName);
 
-	// KNN SEARCH TESTS
+    // KNN SEARCH TESTS
 
-	//nkSearchTestEDM_EXQ(fileNamePrefix + "_spro_nk" , sprotFileName);
-	//KNN+RANGE EQUIV SEARCH TESTS
-	//nkRsSearchTestEDM(fileNamePrefix + "_SwissProt_" , sprotFileName);
-	//nkSearchTestEDM_EXQ_NP(fileNamePrefix + "_spro_np_nk" , sprotFileName);
+    //nkSearchTestEDM_EXQ(fileNamePrefix + "_spro_nk", sprotFileName);
+    // KNN+RANGE EQUIV SEARCH TESTS
+    // nkRsSearchTestEDM(fileNamePrefix + "_SwissProt_" , sprotFileName);
+     nkSearchTestEDM_EXQ_NP(fileNamePrefix + "_spro_np_nk" , sprotFileName);
 
-	//COMPARE AWNSERS FOR CORRECTNESS TESTS:
-	//kNNCompareEDM(fileNamePrefix + "_knncmp", dictionFileName, 100000, 100, 10 , PivotType::RAN, PartType::BOM, true);
+    // COMPARE AWNSERS FOR CORRECTNESS TESTS:
+    // kNNCompareEDM(fileNamePrefix + "_knncmp", dictionFileName, 100000, 1000, 10 , PivotType::RAN, PartType::BOM, true);
 
-	//KNN search with initial radius
-	nkSearchTestEDM_EXQ(fileNamePrefix + "_spro_rknn" , sprotFileName);
+    // KNN search with initial radius
+    //nkSearchTestEDM_EXQ(fileNamePrefix + "_spro_rknn_short" , sprotFileName);
 
-	//nkIncreasingDensityTestEM(100000, 10000, PivotType::RAN, PartType::PIV, 5, fileNamePrefix + "_id");
-	//nkIncreasingDensityTestEM(fileNamePrefix + "_id");
+    // nkIncreasingDensityTestEM(100000, 10000, PivotType::RAN, PartType::PIV, 5, fileNamePrefix + "_id");
+    // nkIncreasingDensityTestEM(fileNamePrefix + "_id");
 
+    // collectSearchTestEDM_V2(fileNamePrefix + "_sprot" , sprotFileName, 0, 24, 50);
+    // collectSearchTestEDM_V2(fileNamePrefix + "_sprot_zoom" , sprotFileName, 0, 10, 10);
 
-	//collectSearchTestEDM_V2(fileNamePrefix + "_sprot" , sprotFileName, 0, 24, 50);
-	//collectSearchTestEDM_V2(fileNamePrefix + "_sprot_zoom" , sprotFileName, 0, 10, 10);
-	
+    // collectCountSearchTestEDM(fileNamePrefix + "_Sprot_count_10K" , sprotFileName);
 
-	//collectCountSearchTestEDM(fileNamePrefix + "_Sprot_count_10K" , sprotFileName);
+    // treeStatsTests("treeStrucStats_kimmo_rs" , dictionFileName);
 
-
-	//treeStatsTests("treeStrucStats_kimmo_rs" , dictionFileName);
- 
-	return 0;
-
+    return 0;
 }
-
-
-
-
-

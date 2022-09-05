@@ -291,9 +291,9 @@ void radiusSearchTestEM_Brin95(const std::string& fileNamePrefix) {
 	//Set the DB sizes and number of queries that we want to test
 	//std::map<unsigned int, unsigned int> nofPoints = getTestSizes(2, 10,18,1, 10000) ;
 	std::map<unsigned int, unsigned int> nofPoints{ {3000,100}, {20000,100 }};
-	std::vector<float>  radii {0.0f, 0.000001f, 0.001f, 0.1f};
+	std::vector<float>  radii {0.0f, 0.000001f, 0.25f, 0.5f};
 
-	std::vector<int> cmt_madis{1};
+	std::vector<int> cmt_madis{1, 1000};
 	std::vector<int> spmt_madis{0};
 	std::vector<int> apmt_madis{0};
 
@@ -336,9 +336,8 @@ void radiusSearchTestEM_Brin95(const std::string& fileNamePrefix) {
 
 void nkSearchTestEM(const std::string &fileNamePrefix){
 	//std::map<unsigned int, unsigned int> nofPoints = getTestSizes(2, 10,18,1, 10000) ;
-	std::map<unsigned int, unsigned int> nofPoints{{1000, 100}, {10000, 100}, {100000, 100}, {1000000, 100},
-		{10000000, 100}};
-	std::vector<unsigned int> maxResults{1, 2 , 4, 6, 8,  10, 20, 40, 60, 80, 100, 200, 400, 600, 800, 1000};
+	std::map<unsigned int, unsigned int> nofPoints{{1000, 100}, {10000, 100}, {100000, 100}, {1000000, 100},};
+	std::vector<unsigned int> maxResults{1, 2 , 4, 6, 8,  10, 20, 40, 60, 80, 100};
 
 	//Short test
 	//std::map<unsigned int, unsigned int> nofPoints{ {100000, 1000}};
@@ -350,7 +349,7 @@ void nkSearchTestEM(const std::string &fileNamePrefix){
 
 
 	std::set<PivotType> includePivotTypes{PivotType::RAN};
-	std::set<PartType> includePartTypes{PartType::BOM, PartType::DMR};
+	std::set<PartType> includePartTypes{PartType::BOM};
 
 	bool hflag = true;
 	std::vector<EuclidianPoint> points, qPoints;
@@ -834,8 +833,8 @@ void kNNSearchCompareEM(unsigned int nPoints, unsigned int nQueries,
 
 
 	std::clock_t start = std::clock();
-	//CMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, kxBalancedTreeHeight(1, points.size()));
-	APMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, 0);
+	CMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, kxBalancedTreeHeight(1, points.size()));
+	//APMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, 0);
 
 	BruteForceSearch<EuclidianPoint, MetricType> stree2(points, met);
 

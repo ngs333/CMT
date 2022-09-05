@@ -6,11 +6,18 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64",
+            "mergeConfigurations": false,
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
         }
     ],
     "version": 4

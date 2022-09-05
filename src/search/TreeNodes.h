@@ -23,7 +23,12 @@ public:
 	int size;
 	FSVector<DI> adi;//the ancestral distance interrval
 	//std::vector<DI> adi;
-	DI   diL, diR; //Normal child distance intervals
+#ifdef USE_HALF_INTERVALS
+	LeftHDI<float> diL;
+	RightHDI<float> diR;
+#else
+	DI diL, diR;   //Left and right distance intervals, distances relative to pivot.
+#endif
 
 	//std::vector<float> dpivots;//Note that sizeof(std::vector<float>) =24 bytes on a 64 bit Windows 
 	std::deque<float> dpivots; //TODO: fix above
@@ -31,11 +36,17 @@ public:
 	CNode(T* object) : object(object) {}
 	virtual ~CNode() {} //DI should be cleared if not static; pivods cleared in Tree::buildTree().
 	bool isLeaf() { return ((left == nullptr) && (right == nullptr)); }
-	void setLeaf() {
-		left = nullptr;  right = nullptr;
-		diL.setNear(0); diL.setFar(0); diR.setNear(0); diR.setFar(0);
-	}
-	float getNear(){
+        void setLeaf() {
+            left = nullptr;
+            right = nullptr;
+            diL.setFar(0);
+            diR.setNear(0);
+#ifndef USE_HALF_INTERVALS
+            diL.setNear(0);
+            diR.setFar(0);
+#endif
+        }
+        float getNear(){
 		if (left != nullptr){
 			return diL.getNear();
 		}else{
@@ -48,35 +59,6 @@ public:
 			return diR.getFar();
 		}else{
 			return diL.getFar();
-		}
-	}
-
-	/*
-		Return true if the query overlaps the left
-		distace interval (i.e if the distance(p,q) is not too
-		far to the right of the left interval)).
-	*/
-	bool rangeOverlapsLeft( const double pqDistance, const double radius){
-		if(left == nullptr){
-			return false;
-		}else if (pqDistance <= diL.getFar() + radius){
-			return true;
-		}else{
-			return false;
-		}
-	}
-	/*
-		Return true if the query overlaps the right
-		distace interval (i.e if the distance(p,q) is not too
-		far to the left of the right interval)).
-	*/
-	bool rangeOverlapsRight( const double pqDistance, const double radius){
-		if(right == nullptr){
-			return false;
-		}else if (pqDistance + radius >= diR.getNear()){
-			return true;
-		}else{
-			return false;
 		}
 	}
 
@@ -120,6 +102,7 @@ public:
 	ANode(T* object) : object{ object } {}
 	bool isLeaf() { return ((left == nullptr) && (right == nullptr)); }
 	void setLeaf() { left = nullptr;  right = nullptr; }
+
 	// get the nearest from among both left and right.
 	float getNear(){
 		if (left != nullptr){
@@ -136,6 +119,7 @@ public:
 			return diL.getFar();
 		}
 	}
+
 	 bool rangeOverlaps(const double pqDistance, const double radius) {
 		if (((left != nullptr) && (diL.rangeOverlaps( pqDistance, radius) == true)) ||
 			((right != nullptr) && (diR.rangeOverlaps( pqDistance, radius) == true)))
@@ -143,49 +127,6 @@ public:
 		else
 			return false;
 	 }
-
-	/*
-		Return true if the query overlaps the left
-		distace interval (i.e if the distance(p,q) is not too
-		far to the right of the left interval)). Note this
-		coniders the left distance interval di = [near, far] == [0, far]
-	*/
-	/*bool rangeOverlapsLeft( const double pqDistance, const double radius){
-		if(left == nullptr){
-			return false;
-		}else if (pqDistance <= diL.getFar() + radius){
-			return true;
-		}else{
-			return false;
-		}
-	}
-	*/
-	/*
-		Return true if the query overlaps the right
-		distace interval (i.e if the distance(p,q) is not too
-		far to the left of the right interval)).  Note this
-		coniders the right distance interval di = [near, far] == [near, infinity]
-	*/
-	/*
-	bool rangeOverlapsRight( const double pqDistance, const double radius){
-		if(right == nullptr){
-			return false;
-		}else if (pqDistance + radius >= diR.getNear()){
-			return true;
-		}else{
-			return false;
-		}
-    }
-	*/
-
-    bool rangeOverlaps(DistanceInterval<float> & di, const double pqDistance, const double radius) {
-        if ((pqDistance >= di.getNear() - radius) &&
-            (pqDistance <= di.getFar() + radius)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 };
 
 /**

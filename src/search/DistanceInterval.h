@@ -9,7 +9,13 @@
 #include "Misc.h"
 #include "MemoryAux.h"
 
-#define USE_NEXTAFTER 1
+
+/**
+ * Define USE_NEXTAFTER to expand the bounding interval bounds (sides) to the next lowest and 
+ * next highest representable floats. Otherwise you may need to expand the radius by epsilon (~1/(10^6))
+ * or (possibly) store bounding intervals as doubles.
+ * 
+ */
 
 template <typename T>
 class DistanceInterval {
@@ -54,7 +60,8 @@ public:
 	}
 };
 /*
-	Half open distance intervals for rhs data
+	Half open distance intervals for LHS of set partition
+	(assiged to left node)
 */
 template <typename T>
 class LeftHDI {
@@ -90,6 +97,10 @@ public:
 	}
 };
 
+/**
+Half open distance intervals for RHS of set partition
+	(assiged to left node)
+	*/
 template <typename T>
 class RightHDI {
 private:

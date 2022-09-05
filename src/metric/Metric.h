@@ -6,12 +6,14 @@
 #include <cmath>
 
 #include "Sequence.h"
-#include "ParasailInterface.h"
 #include "SmithWatermanUM.h"
 #include "Misc.h"
 #include "EditDistance.h"
 #include "edlib.h"
 
+#ifdef USE_PARASAIL_LIB
+	#include "ParasailInterface.h"
+#endif
 
 template <class T>
 class Metric {

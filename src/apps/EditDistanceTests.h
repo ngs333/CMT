@@ -18,6 +18,7 @@
 #include "SearchCommon.h"
 #include "CMTree.h"
 #include "SPMTree.h"
+#include "APMTree.h"
 #include "BruteForceSearch.h"
 #include "GPCharacters.hpp"
 #include "Reader.h"
@@ -43,6 +44,63 @@ auto generateWords(unsigned int nWords, unsigned int aveWordLength, unsigned int
 		idStream.clear();
 	}
 	return words;
+}
+
+/**
+	Use the search tree(s) to perform range search over the various combinations of the
+	search options (pivot types, radii, db sizes, etc).
+	This function is used primarily to gather performance comparison statistics
+**/
+void radiusSearchTestEDM(const std::string& fileNamePrefix, const std::string& inputDataFName) {
+	unsigned int bTime;
+	std::vector<float> radii{ 1.0f, 2.0f};
+
+	//std::map<unsigned int, unsigned int> nofPoints = getTestSizes(2, 10,18,1, 10000) ;
+	//std::map<unsigned int, unsigned int> nofPoints = getTestSizes(10, 2, 7, 1, 10000);
+	//std::map<unsigned int, unsigned int> nofPoints{ {1000,1000 }, {10000,1000 }, {100000,1000 },  {1000000,1000 } };
+	std::map<unsigned int, unsigned int> nofPoints{ {100000,1000 } };
+	
+	
+	//std::set<PivotType> includePivotTypes{ PivotType::RAN, PivotType::EXT};//FOR CMT
+	//std::set<PartType>  includePartTypes{ PartType::DMR,PartType::OM, PartType::BOM };
+
+	std::set<PivotType> includePivotTypes{ PivotType::RAN, PivotType::EXT };
+	std::set<PartType>  includePartTypes{  PartType::BOM, PartType::DMR };
+
+	
+	std::vector<int> cmt_madis {1000, 1};
+	std::vector<int> amt_madis {0};
+
+	auto start = std::clock();
+	Reader reader;
+	auto allWords = reader.read(inputDataFName, 100000);
+	bTime = dTimeSeconds(start);
+	std::cout << "radiusSearchTestEDM datagen time=" << bTime << std::endl;
+	auto lenSum = 0;
+	for (const auto& s : allWords) {
+		lenSum += s.getValue().size();
+	}
+	auto aveWordLength = lenSum / allWords.size();
+
+	bool hflag = true;
+	for (const auto& [np, nQueries] : nofPoints) {
+		auto words = getSubsetRandom(allWords, np);
+		auto qSeqs= getSubsetRandom(words, nQueries);
+		for (const auto& pivType : includePivotTypes) {
+			for (const auto& partType : includePartTypes) {
+				for (const auto& madi : cmt_madis){
+					radiusSearchTest<Sequence, EditDistMetric,CMTree<Sequence, EditDistMetric>>
+					(words, qSeqs, aveWordLength, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+				for (const auto& madi : amt_madis){
+					radiusSearchTest<Sequence, EditDistMetric,APMTree<Sequence, EditDistMetric>>
+					(words, qSeqs, aveWordLength, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+			}
+		}
+	}
 }
 
 
@@ -309,7 +367,8 @@ void nkSearchTestEDM_EXQ(const std::string& fileNamePrefix, const std::string& i
 	
 	std::vector<float> lcmt_npivs ;
 	std::vector<int> cmt_madis {1,1000};
-	std::vector<int> spmt_madis {0};
+	std::vector<int> spmt_madis;
+	std::vector<int> apmt_madis {0};
 	
 	//Below assumes words are already in random order
 	std::vector<Sequence> words(allWords.begin(), allWords.begin() + (allWords.size() - nQueries));
@@ -339,9 +398,14 @@ void nkSearchTestEDM_EXQ(const std::string& fileNamePrefix, const std::string& i
 
               hflag = false;
             }
-            
-            for (const auto& madi : spmt_madis) {
+             for (const auto& madi : spmt_madis) {
               nkSearchTest<Sequence, EditDistMetric, SPMTree<Sequence, EditDistMetric>>(
+                  dWords, qSeqs, radii, aveWordLength, maxResults, pivType, partType, madi, fileNamePrefix, hflag,
+                  radMultOut);
+              hflag = false;
+            }
+            for (const auto& madi : apmt_madis) {
+              nkSearchTest<Sequence, EditDistMetric, APMTree<Sequence, EditDistMetric>>(
                   dWords, qSeqs, radii, aveWordLength, maxResults, pivType, partType, madi, fileNamePrefix, hflag,
                   radMultOut);
               hflag = false;
@@ -380,7 +444,7 @@ void nkSearchTestEDM_EXQ_NP(const std::string& fileNamePrefix, std::vector<Seque
 	//std::vector<float> lcmt_npivs{1,2, 4} ;
 	std::vector<float> lcmt_npivs;
 	std::vector<int> cmt_madis {1,1000};
-	std::vector<int> spmt_madis {0};
+	std::vector<int> apmt_madis {0};
 
 			
 	bool hflag = true; 
@@ -407,8 +471,8 @@ void nkSearchTestEDM_EXQ_NP(const std::string& fileNamePrefix, std::vector<Seque
 					if (hflag == true) { hflag = false; }
 				}
 				
-				for (const auto& madi : spmt_madis){
-					nkSearchTest<Sequence, EditDistMetric,SPMTree<Sequence, EditDistMetric>>
+				for (const auto& madi : apmt_madis){
+					nkSearchTest<Sequence, EditDistMetric,APMTree<Sequence, EditDistMetric>>
 					(dWords, qSeqs, radii, aveWordLength, maxResults, pivType, partType, madi, fileNamePrefix, hflag);
 					if (hflag == true) { hflag = false; }
 				}
@@ -618,6 +682,7 @@ void kNNCompareEDM(const std::string fileNamePrefix, const std::string inputData
 	EditDistMetric met;
 	start = std::clock();
 	CMTree<Sequence, EditDistMetric> stree(words, met, pivT, partT);
+	//APMTree<Sequence, EditDistMetric> stree(words, met, pivT, partT);
 	BruteForceSearch<Sequence, EditDistMetric> stree2(words, met);
 	bTime = dTimeSeconds(start);
 	cout << "firstkSearchTest btime=" << bTime << endl;

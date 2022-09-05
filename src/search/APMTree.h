@@ -246,14 +246,14 @@ void APMTree<T, M >::searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, 
 	while (!pq.empty()) {
 		PQNodePtr qn = pq.top();
 		pq.pop();
-		auto tnd = qn->node; // tree node
-		sq.addResult(tnd->object, qn->distance);	
+		auto pnd = qn->node; // tree node
+		sq.addResult(pnd->object, qn->distance);	
 		if(qn->pruningDist <= sq.searchRadius()) {
 			auto pqDist = qn->distance;
-			auto lnd = tnd->left;
-			auto rnd = tnd->right;
+			auto lnd = pnd->left;
+			auto rnd = pnd->right;
 			if (lnd != nullptr) {
-				if (tnd->diL.rangeOverlaps(pqDist, sq.searchRadius()) == true) {
+				if (pnd->diL.rangeOverlaps(pqDist, sq.searchRadius()) == true) {
 					this->perfStats.incNodesVisited();
 					auto dist = met.distance(&target, lnd->object);
 					this->perfStats.incDistanceCalls();
@@ -262,7 +262,7 @@ void APMTree<T, M >::searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, 
 				}
 			}
 			if (rnd != nullptr) {
-				if (tnd->diR.rangeOverlaps(pqDist, sq.searchRadius()) == true){
+				if (pnd->diR.rangeOverlaps(pqDist, sq.searchRadius()) == true){
 					this->perfStats.incNodesVisited();
 					auto dist = met.distance(&target, rnd->object);
 					this->perfStats.incDistanceCalls();
@@ -274,22 +274,9 @@ void APMTree<T, M >::searchK(PQType& pq, const T& target, NearestKQuery<T>& sq, 
 	}
 }
 
-	// auto pd = pruningDistance<double>(dist, std::min(nd->diL.getNear(), nd->diR.getNear()), nd->diR.getFar());
-	/// Worked:
-	/*
-	if (nd->left != nullptr){
-		auto pd = pruningDistance<double>(dist, nd->diL.getNear(), nd->diL.getFar());
-		if (pd <= sq.searchRadius()){
-			searchR(nd->left, target, sq, met);
-		}
-	}
-	if (nd->right != nullptr){
-		auto pd = pruningDistance<double>(dist, nd->diR.getNear(), nd->diR.getFar());
-		if (pd <= sq.searchRadius()) {
-			searchR(nd->right, target, sq, met);
-		}
-	}
-	****/
+/*
+Range search function
+**/
 template <typename T, typename M>
 void APMTree<T, M>::searchR(NodePtr& nd, const T& target, RadiusQuery<T>& sq, M& met) {
     if (nd == nullptr)
@@ -300,8 +287,6 @@ void APMTree<T, M>::searchR(NodePtr& nd, const T& target, RadiusQuery<T>& sq, M&
     sq.addResult(nd->object, dist);
 
     if (nd->left != nullptr) {
-        // if (dist <= nd->diL.getFar() + sq.searchRadius()){
-        //if (nd->rangeOverlapsLeft(dist, sq.searchRadius())) {
 		if (nd->diL.rangeOverlaps(dist, sq.searchRadius())) {	
             searchR(nd->left, target, sq, met);
         }
@@ -315,8 +300,9 @@ void APMTree<T, M>::searchR(NodePtr& nd, const T& target, RadiusQuery<T>& sq, M&
 }
 
 template <typename T, typename M>
-void APMTree<T, M >::searchCollect(NodePtr& nd, const T& target, SimilarityQuery<T>& sq, M& met) {
-    if (nd == nullptr) return;
+void APMTree<T, M>::searchCollect(NodePtr& nd, const T& target, SimilarityQuery<T>& sq, M& met) {
+    if (nd == nullptr)
+        return;
 
     this->perfStats.incNodesVisited();
     auto dist = met.distance(&target, nd->object);
@@ -328,10 +314,8 @@ void APMTree<T, M >::searchCollect(NodePtr& nd, const T& target, SimilarityQuery
     } else {
         sq.addResult(nd->object, dist);
         if (nd->left != nullptr) {
-           	// if (nd->rangeOverlapsLeft(dist, sq.searchRadius())) {
-            // if (dist <= nd->diL.getFar() + sq.searchRadius()){
-	  if (nd->diL.rangeOverlaps(dist, sq.searchRadius())) {
-	    searchCollect(nd->left, target, sq, met);
+            if (nd->diL.rangeOverlaps(dist, sq.searchRadius())) {
+                searchCollect(nd->left, target, sq, met);
             }
         }
         if (nd->right != nullptr) {
@@ -342,7 +326,6 @@ void APMTree<T, M >::searchCollect(NodePtr& nd, const T& target, SimilarityQuery
     }
     return;
 }
-
 
 /*
 	
