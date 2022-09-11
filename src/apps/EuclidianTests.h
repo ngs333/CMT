@@ -17,6 +17,7 @@
 #include "Metric.h"
 #include "SearchCommon.h"
 #include "SPMTree.h"
+#include "APMTree.h"
 #include "CMTree.h"
 #include "BruteForceSearch.h"
 
@@ -167,20 +168,15 @@ void getDataBounds(std::vector<EuclidianPoint>& points, std::array<EuclidianPoin
 void radiusSearchTestEM(const std::string& fileNamePrefix) {
 	//Set the DB sizes and number of queries that we want to test
 	//std::map<unsigned int, unsigned int> nofPoints = getTestSizes(2, 10,18,1, 10000) ;
-	//std::map<unsigned int, unsigned int> nofPoints{ {1000,100}, {10000,1000 } ,{100000,1000 } ,{1000000,1000 } };
-	std::map<unsigned int, unsigned int> nofPoints{  {10000,1000 }  };
+	std::map<unsigned int, unsigned int> nofPoints{ {1000,100}, {10000,1000 } ,{100000,1000 } ,{1000000,1000 } };
+	std::vector<float> radii {0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f};
 
-	//std::vector<float> radii {0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f};
-	std::vector<float> radii {1.0f};
-
-	//std::vector<float> lcmt_npivs {0.25, 0.5, 1.0, 2.0, 3.0 };
-	//std::vector<int> cmt_madis {1000, 1};
-
-	std::vector<float> lcmt_npivs ;
-	std::vector<int> cmt_madis {1000};
+	std::vector<int> cmt_madis{1 , 1000};//,1};
+	std::vector<int> spmt_madis{0};
+	std::vector<int> apmt_madis{0};
 
 	std::set<PivotType> includePivotTypes{ PivotType::RAN};
-	std::set<PartType>  includePartTypes{ PartType::BOM};
+	std::set<PartType>  includePartTypes{ PartType::BOM, PartType::DMR};
 	bool hflag = true;
 	std::vector<EuclidianPoint> points, qPoints;
 	for (const auto& [np, nQueries] : nofPoints) {
@@ -193,10 +189,69 @@ void radiusSearchTestEM(const std::string& fileNamePrefix) {
 					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
 					hflag = false; //Dont print header after 1st time.
 				}
+				for (const auto& madi : spmt_madis){
+					if(partType == PartType::DMR) continue;
+					radiusSearchTest<EuclidianPoint, EuclidianMetric,SPMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+				for (const auto& madi : apmt_madis){
+					radiusSearchTest<EuclidianPoint, EuclidianMetric,APMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
 			}
 		}
 	}
 }
+
+
+/* Programusefull for debugging */
+void radiusSearchTestEM_S(const std::string& fileNamePrefix) {
+
+	//std::map<unsigned int, unsigned int> nofPoints{ {63,1}};
+	//std::vector<float>  radii { 0.000001f};
+	//std::vector<float>  radii {0.5}
+
+	std::map<unsigned int, unsigned int> nofPoints{ {10000,100}};
+	std::vector<float>  radii {0.0f, 0.000001f, 0.5f, 1.0f, 2.0f};
+
+	std::vector<int> cmt_madis;//{1 , 1000};//,1};
+	std::vector<int> spmt_madis{0};
+	std::vector<int> apmt_madis{0};
+
+	std::set<PivotType> includePivotTypes{ PivotType::RAN};
+	std::set<PartType>  includePartTypes{ PartType::BOM };
+	bool hflag = true;
+
+	for (const auto& [np, nQueries] : nofPoints) {
+		auto [points, qPoints] = generatePointsQD(np, nQueries);
+		//std::vector<EuclidianPoint> points  = genEuclidianPointsOnLine<1,EuclidianPointPointType>(np);
+		//std::vector<EuclidianPoint> qPoints(points.begin()+ 3, points.begin() + 3 + nQueries);
+		for (const auto& pivType  : includePivotTypes) {
+			for (const auto& partType : includePartTypes) {
+				for (const auto& madi : cmt_madis){
+					radiusSearchTest<EuclidianPoint, EuclidianMetric,CMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+				for (const auto& madi : spmt_madis){
+					radiusSearchTest<EuclidianPoint, EuclidianMetric,SPMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+				for (const auto& madi : apmt_madis){
+					radiusSearchTest<EuclidianPoint, EuclidianMetric,APMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+				
+			}
+		}
+	}
+}
+
+
 
 /**
 	Use the search tree(s) to perform range search over various combinations of the
@@ -232,6 +287,48 @@ void radiusSearchTestEMCount(const std::string& fileNamePrefix) {
 	}
 }
 
+void radiusSearchTestEM_Brin95(const std::string& fileNamePrefix) {
+	//Set the DB sizes and number of queries that we want to test
+	//std::map<unsigned int, unsigned int> nofPoints = getTestSizes(2, 10,18,1, 10000) ;
+	std::map<unsigned int, unsigned int> nofPoints{ {3000,100}, {20000,100 }};
+	std::vector<float>  radii {0.0f, 0.000001f, 0.25f, 0.5f};
+
+	std::vector<int> cmt_madis{1, 1000};
+	std::vector<int> spmt_madis{0};
+	std::vector<int> apmt_madis{0};
+
+	std::set<PivotType> includePivotTypes{ PivotType::RAN};
+	std::set<PartType>  includePartTypes{ PartType::BOM };
+	bool hflag = true;
+	std::vector<EuclidianPoint>  allPoints, qPoints2;
+	for (const auto& [np, nQueries] : nofPoints) {
+		auto [allPoints, qPoints2] = generatePointsBrin95(np + nQueries, 1);
+		std::vector<EuclidianPoint> points(allPoints.begin(), allPoints.begin() + (allPoints.size() - nQueries));
+		//std::vector<EuclidianPoint> qPoints(allPoints.begin() + (allPoints.size() - nQueries), allPoints.end());
+		std::vector<EuclidianPoint> qPoints(allPoints.begin(), allPoints.begin() + nQueries);
+		for (const auto& pivType  : includePivotTypes) {
+			for (const auto& partType : includePartTypes) {
+				for (const auto& madi : cmt_madis){
+					radiusSearchTest<EuclidianPoint, EuclidianMetric,CMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+				for (const auto& madi : spmt_madis){
+					radiusSearchTest<EuclidianPoint, EuclidianMetric,SPMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+				for (const auto& madi : apmt_madis){
+					radiusSearchTest<EuclidianPoint, EuclidianMetric,APMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, pivType, partType, madi, fileNamePrefix, hflag);
+					hflag = false; //Dont print header after 1st time.
+				}
+				
+			}
+		}
+	}
+}
+
 
 
 
@@ -239,15 +336,16 @@ void radiusSearchTestEMCount(const std::string& fileNamePrefix) {
 
 void nkSearchTestEM(const std::string &fileNamePrefix){
 	//std::map<unsigned int, unsigned int> nofPoints = getTestSizes(2, 10,18,1, 10000) ;
-	std::map<unsigned int, unsigned int> nofPoints{{1000, 100}, {10000, 100}, {100000, 100}, {1000000, 100},
-		{10000000, 100}};
-	//std::map<unsigned int, unsigned int> nofPoints{ {10000000, 100}};
-	
-	std::vector<unsigned int> maxResults{1, 2 , 4, 6, 8,  10, 20, 40, 60, 80, 100, 200, 400, 600, 800, 1000};
-	
-	std::vector<float> lcmt_npivs; //{0.5, 1, 2, 4}
-	std::vector<int> cmt_madis {1,1000};
-	std::vector<int> spmt_madis{0};
+	std::map<unsigned int, unsigned int> nofPoints{{1000, 100}, {10000, 100}, {100000, 100}, {1000000, 100},};
+	std::vector<unsigned int> maxResults{1, 2 , 4, 6, 8,  10, 20, 40, 60, 80, 100};
+
+	//Short test
+	//std::map<unsigned int, unsigned int> nofPoints{ {100000, 1000}};
+	//std::vector<unsigned int> maxResults{1,4,10, 50};
+		
+	std::vector<int> cmt_madis{1,1000};
+    std::vector<int> spmt_madis{0};
+	std::vector<int> apmt_madis{0}; // not finished {0};
 
 
 	std::set<PivotType> includePivotTypes{PivotType::RAN};
@@ -270,7 +368,14 @@ void nkSearchTestEM(const std::string &fileNamePrefix){
 				}
 				
 				for (const auto& madi : spmt_madis){
+					if(partType == PartType::DMR)
+						continue;
 					nkSearchTest<EuclidianPoint, EuclidianMetric,SPMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, radii, EuclidianPointDim, maxResults, pivType, partType,madi, fileNamePrefix, hflag);
+					if (hflag == true) {hflag = false;}
+				}
+				for (const auto& madi : apmt_madis){
+					nkSearchTest<EuclidianPoint, EuclidianMetric,APMTree<EuclidianPoint, EuclidianMetric>>
 					(points, qPoints, radii, EuclidianPointDim, maxResults, pivType, partType,madi, fileNamePrefix, hflag);
 					if (hflag == true) {hflag = false;}
 				}
@@ -423,7 +528,9 @@ void collectCountSearchTestEM(const std::string& fileNamePrefix) {
 	std::set<PivotType> includePivotTypes{ PivotType::RAN}; 
 	std::set<PartType>  includePartTypes{ PartType::BOM};
 
-	std::vector<int> cmt_madis {1,1000};
+	std::vector<int> cmt_madis{1 , 1000};//,1};
+	std::vector<int> spmt_madis{0};
+	std::vector<int> apmt_madis{0};
 
 	bool hflag = true;
 	std::vector<EuclidianPoint> points, qPoints;
@@ -445,7 +552,9 @@ void collectCountSearchTestEM(const std::string& fileNamePrefix) {
 void collectCountSearchPlusTestEM(const std::string& fileNamePrefix) {
   std::map<unsigned int, unsigned int> nofPoints{{100000, 100}};
 
-   std::vector<float> radii { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 6.5f, 7.0f, 7.5f, 8.0f, 8.5f, 9.0f, 9.5f ,10.0f};
+	std::vector<float> radii { 1.0f, 2.0f, 4.0f, 7.0f ,10.0f};	
+	//two sets below used in PAMI tests
+   //std::vector<float> radii { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 6.5f, 7.0f, 7.5f, 8.0f, 8.5f, 9.0f, 9.5f ,10.0f};
   // std::vector<float> radii
   // { 1.0f, 2.0f, 4.0f,  6.0f,  8.0f, 10.0f, 12.0f, 14.0f, 16.0f, 20.0f, 22.0f, 24.0f, 26.0f, 28.0f, 30.0f};
 
@@ -453,8 +562,9 @@ void collectCountSearchPlusTestEM(const std::string& fileNamePrefix) {
   std::set<PivotType> includePivotTypes{PivotType::RAN};
   std::set<PartType> includePartTypes{PartType::BOM};
 
-  std::vector<float> lcmt_npivs{1, 2, 4};
   std::vector<int> cmt_madis{1, 1000};
+  std::vector<int> spmt_madis{0};
+  std::vector<int> apmt_madis{0};
 
   bool hflag = true;
   std::vector<EuclidianPoint> points, qPoints;
@@ -465,13 +575,22 @@ void collectCountSearchPlusTestEM(const std::string& fileNamePrefix) {
     for (const auto& pivType : includePivotTypes) {
       for (const auto& partType : includePartTypes) {
         for (const auto& madi : cmt_madis) {
-          collectCountSearchTest<EuclidianPoint, EuclidianMetric, CMTree<EuclidianPoint, EuclidianMetric>>(
-              points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag);
-          if (hflag == true) {
+         	collectCountSearchTest<EuclidianPoint, EuclidianMetric, CMTree<EuclidianPoint, EuclidianMetric>>
+            (points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag);
             hflag = false;
-          }
+          
         }
-      }
+		for (const auto& madi : spmt_madis){
+	  		collectCountSearchTest<EuclidianPoint, EuclidianMetric, SPMTree<EuclidianPoint, EuclidianMetric>>
+            (points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag);
+			hflag = false; //Dont print header after 1st time.
+		}
+		for (const auto& madi : apmt_madis){
+		  	collectCountSearchTest<EuclidianPoint, EuclidianMetric, APMTree<EuclidianPoint, EuclidianMetric>>
+            (points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag);
+			hflag = false; // Dont print header after 1st time.
+		}
+	  }
     }
   }
 
@@ -494,14 +613,16 @@ void collectCountSearchPlusTestEM(const std::string& fileNamePrefix) {
 void collectSearchTestEM(const std::string& fileNamePrefix) {
 	std::map<unsigned int, unsigned int> nofPoints{ {1000000,100 } };
 	//std::vector<float> radii {0.25f, 0.5f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f}; //For DIM=10
-    std::vector<float> radii {1.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f, 110.0f, 120.0f, 130.0f, 140.0f}; //For DIM=3 1M
-
+    //std::vector<float> radii {1.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f, 110.0f, 120.0f, 130.0f, 140.0f}; //For DIM=3 1M
+	std::vector<float> radii {0.25f, 0.5f, 1.0f, 5.0f}; //For DIM=10
 
 
 	std::set<PivotType> includePivotTypes{ PivotType::RAN}; 
 	std::set<PartType>  includePartTypes{ PartType::BOM};
 
-	std::vector<int> cmt_madis {1, 1000};
+	std::vector<int> cmt_madis;// {1, 1000};
+	std::vector<int> amt_madis {0};
+
 
 	bool hflag = true;
 	std::vector<EuclidianPoint> points, qPoints;
@@ -514,6 +635,11 @@ void collectSearchTestEM(const std::string& fileNamePrefix) {
 					(points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag);
 					if (hflag == true) {hflag = false;}
 				}
+				for (const auto& madi : amt_madis){
+					collectSearchTest<EuclidianPoint, EuclidianMetric,APMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag);
+					if (hflag == true) {hflag = false;}
+				}
 			}
 		}
 	}
@@ -521,25 +647,33 @@ void collectSearchTestEM(const std::string& fileNamePrefix) {
 
 
 /*
-	Collectionand normal rad search. Radii are auto determined from the
+	Collection and normal range search. Radii are auto determined from the
 	boundaries of the dataset. There are nrad (e.g. 10) evently psaced small radii and
 	nrad evenaly spaced large radii. The largest radii is equal to the 
 	largest distance possible in the hyper-cubed space.
 
 */
 void collectSearchTestEMAutoRad(const std::string& fileNamePrefix, int nrad, float maxRadPct) {
-	std::map<unsigned int, unsigned int> nofPoints{{10000,100 } ,{100000,100 } , {1000000,100 } , {10000000,100 }};
+	//std::map<unsigned int, unsigned int> nofPoints{{10000,100 } ,{100000,100 } , {1000000,100 } , {10000000,100 }};
 	//std::map<unsigned int, unsigned int> nofPoints{{10000,100 } ,{100000,100 } , {1000000,100 }};
 	//std::map<unsigned int, unsigned int> nofPoints{{10000000,100 }};
-    std::vector<float> radii;
+	std::map<unsigned int, unsigned int> nofPoints{{100000,100 }};
+	std::vector<float> radii;
 	bool rangeSearchToo = true;
 	
 
-	std::set<PivotType> includePivotTypes{ PivotType::RAN}; 
-	std::set<PartType>  includePartTypes{ PartType::BOM };
+	std::set<PivotType> includePivotTypes{ PivotType::RAN, PivotType::EXT, PivotType::CENT}; 
+	std::set<PartType>  includePartTypes{ PartType::BOM, PartType::DMR};
+
+	//std::set<PivotType> includePivotTypes{  PivotType::CENT}; 
+	//std::set<PartType>  includePartTypes{ PartType::EXT};
+
+	//std::set<PivotType> includePivotTypes{  PivotType::RAN}; 
+	//std::set<PartType>  includePartTypes{ PartType::BOM};
 
 	std::vector<int> cmt_madis{1,1000}; // {1};
-	std::vector<int> spmt_madis{0};// {0};
+	std::vector<int> spmt_madis;//{0};//{0};// {0};
+	std::vector<int> apmt_madis{0};// {0};
 
 
 	bool hflag = true;
@@ -556,6 +690,7 @@ void collectSearchTestEMAutoRad(const std::string& fileNamePrefix, int nrad, flo
 		float delta = 3.0 / nrad;
 
 		radii.clear();
+		//for (int i = 0; i <= 10; i++){ //TEST
 		for (int i = 0; i <= nrad; i++){
 			radii.push_back(i * delta * maxDist);
 		}
@@ -566,12 +701,17 @@ void collectSearchTestEMAutoRad(const std::string& fileNamePrefix, int nrad, flo
 				for (const auto& madi : cmt_madis){
 					collectSearchTest<EuclidianPoint, EuclidianMetric,CMTree<EuclidianPoint, EuclidianMetric>>
 					(points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag, rangeSearchToo);
-					if (hflag == true) {hflag = false;}
+					{hflag = false;}
+				}
+				for (const auto& madi : apmt_madis){
+					collectSearchTest<EuclidianPoint, EuclidianMetric,APMTree<EuclidianPoint, EuclidianMetric>>
+					(points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag, rangeSearchToo);
+					{hflag = false;}
 				}
 				for (const auto& madi : spmt_madis){
 					collectSearchTest<EuclidianPoint, EuclidianMetric,SPMTree<EuclidianPoint, EuclidianMetric>>
 					(points, qPoints, EuclidianPointDim, radii, false, pivType, partType, madi, fileNamePrefix, hflag, rangeSearchToo);
-					if (hflag == true) {hflag = false;}
+					{hflag = false;}
 				}
 			}
 		}
@@ -591,8 +731,8 @@ void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, Pi
 	auto [points, qPoints] = generatePointsBrin95(nPoints, nQueries);
 
 	auto start = std::clock();
-	//SPMTree<EuclidianPoint, MetricType> stree(points, met);
-	CMTree<EuclidianPoint, MetricType> stree(points, met,pivT, partT, kxBalancedTreeHeight(1,points.size()));
+	APMTree<EuclidianPoint, MetricType> stree(points, met);
+	//CMTree<EuclidianPoint, MetricType> stree(points, met,pivT, partT, kxBalancedTreeHeight(1,points.size()));
 	BruteForceSearch<EuclidianPoint, MetricType> stree2(points, met);
 	bTime = dTimeSeconds(start);
 	cout << "radiusSearchTest btime=" << bTime << endl;
@@ -604,7 +744,7 @@ void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, Pi
 	unsigned int nFound = 0;
 	unsigned int diffCount = 0;
 	const unsigned int maxResults = 1000000;
-	auto rad = 0.0;
+	auto rad = 0.5;
 	for (const auto& qp : qPoints) {
 		/*if(nqActual == 2) {
 			cout << "pq id="<<qp.getId() << endl;
@@ -621,7 +761,7 @@ void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, Pi
 
 		if (!rq.hasSameNeighbors(rq2)) {
 			diffCount++;
-			/*
+			
 			auto missingIn1 = rq.missingNeighbors(rq2);
 			auto missingIn2 = rq2.missingNeighbors(rq);
 			std::cout << "id=" << rq.getTarget() << std::endl;
@@ -635,8 +775,8 @@ void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, Pi
 			}
 			
 			std::cout << "---listing nbrs---:" << std::endl;
-			auto nba = rq.getNeigbors();
-			auto nbb = rq2.getNeigbors();
+			auto nba = rq.getNeighbors();
+			auto nbb = rq2.getNeighbors();
 			for (const auto& n : nba) {
 				std::cout << "d =" << n.distance << " id=" << n.id << std::endl;
 			}
@@ -648,7 +788,7 @@ void radiusSearchCompareEM(unsigned int nPoints, const unsigned int nQueries, Pi
 			std::cout << "-----" << std::endl;
 			int i;
 			std::cin >> i;
-			*/
+			
 		}
 
 	    nqActual++;
@@ -694,6 +834,8 @@ void kNNSearchCompareEM(unsigned int nPoints, unsigned int nQueries,
 
 	std::clock_t start = std::clock();
 	CMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, kxBalancedTreeHeight(1, points.size()));
+	//APMTree<EuclidianPoint, MetricType> stree(points, met, pivT, partT, 0);
+
 	BruteForceSearch<EuclidianPoint, MetricType> stree2(points, met);
 
 	bTime = dTimeSeconds(start);

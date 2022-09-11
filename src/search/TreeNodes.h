@@ -20,9 +20,15 @@ public:
 	T* object; 
 	CNode* left;
 	CNode* right;
+	int size;
 	FSVector<DI> adi;//the ancestral distance interrval
 	//std::vector<DI> adi;
-	DistanceInterval<float>    di; //Normal child distance interval
+#ifdef USE_HALF_INTERVALS
+	LeftHDI<float> diL;
+	RightHDI<float> diR;
+#else
+	DI diL, diR;   //Left and right distance intervals, distances relative to pivot.
+#endif
 
 	//std::vector<float> dpivots;//Note that sizeof(std::vector<float>) =24 bytes on a 64 bit Windows 
 	std::deque<float> dpivots; //TODO: fix above
@@ -30,9 +36,30 @@ public:
 	CNode(T* object) : object(object) {}
 	virtual ~CNode() {} //DI should be cleared if not static; pivods cleared in Tree::buildTree().
 	bool isLeaf() { return ((left == nullptr) && (right == nullptr)); }
-	void setLeaf() {
-		left = nullptr;  right = nullptr;
-		di.setNear(0); di.setFar(0);
+        void setLeaf() {
+            left = nullptr;
+            right = nullptr;
+            diL.setFar(0);
+            diR.setNear(0);
+#ifndef USE_HALF_INTERVALS
+            diL.setNear(0);
+            diR.setFar(0);
+#endif
+        }
+        float getNear(){
+		if (left != nullptr){
+			return diL.getNear();
+		}else{
+			return diR.getNear();
+		}
+	}
+	// get the furthest from among both left and right.	
+	float getFar(){
+		if (right != nullptr){
+			return diR.getFar();
+		}else{
+			return diL.getFar();
+		}
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, CNode& nd) {
@@ -46,13 +73,60 @@ template <class T>
 class MNode {
 public:
 	T* object;           // Point or object selected as pivot - one per node.
+	int size;
 	DistanceInterval<float> di; 
-	double sstemp;//Used a temp variable and aslo for sef score after tree is done.
+	float sstemp;//Used a temp variable and aslo for sef score after tree is done.
 	MNode* left;  //I.e. left child, etc.
 	MNode* right;
 	MNode(T* object) : object{ object } {}
 	bool isLeaf() { return ((left == nullptr) && (right == nullptr)); }
 	void setLeaf() { left = nullptr;  right = nullptr; }
+};
+
+//Metric tree nodes.
+template <class T>
+class ANode {
+public:
+	T* object;           // Point or object selected as pivot - one per node.
+	int size;
+#ifdef USE_HALF_INTERVALS
+	LeftHDI<float> diL;
+	RightHDI<float> diR;
+#else
+	DI diL, diR;   //Left and right distance intervals, distances relative to pivot.
+#endif
+
+	float sstemp;//Used a temp variable and aslo for sef score after tree is done.
+	ANode* left;  //I.e. left child, etc.
+	ANode* right;
+	ANode(T* object) : object{ object } {}
+	bool isLeaf() { return ((left == nullptr) && (right == nullptr)); }
+	void setLeaf() { left = nullptr;  right = nullptr; }
+
+	// get the nearest from among both left and right.
+	float getNear(){
+		if (left != nullptr){
+			return diL.getNear();
+		}else{
+			return diR.getNear();
+		}
+	}
+	// get the furthest from among both left and right.	
+	float getFar(){
+		if (right != nullptr){
+			return diR.getFar();
+		}else{
+			return diL.getFar();
+		}
+	}
+
+	 bool rangeOverlaps(const double pqDistance, const double radius) {
+		if (((left != nullptr) && (diL.rangeOverlaps( pqDistance, radius) == true)) ||
+			((right != nullptr) && (diR.rangeOverlaps( pqDistance, radius) == true)))
+			return true;
+		else
+			return false;
+	 }
 };
 
 /**

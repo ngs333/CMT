@@ -120,6 +120,28 @@ genEuclidianPointsUniform(std::vector<int>::size_type nPoints, PointType start, 
 	}
 	return EuPoints;
 }
+/*
+	 Generate nPoints euclidian of equal spacing on a line. Usefull for
+	 1D debugging
+*/
+template <unsigned int DIM, class PointType>
+std::vector<EuclidianPoint>
+genEuclidianPointsOnLine(const unsigned int nPoints){
+	std::ostringstream idStream;
+	std::vector<EuclidianPoint> EuPoints;
+	EuPoints.reserve(nPoints);
+	std::array<PointType, DIM> point;
+	for (auto i = 0; i < nPoints; i++){
+		for (auto j = 0; j < DIM; j++){
+			point[j] = i;
+		}
+		idStream.str("");
+		idStream.clear();
+		idStream << "_" << i;
+		EuPoints.push_back(EuclidianPoint(idStream.str(), point));
+	}
+	return EuPoints;
+}
 
 /**
 	Get a vector of DIM distribution objects.

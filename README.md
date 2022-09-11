@@ -32,7 +32,9 @@ git submodule update --init --recursive
 
 ## Compiling:
 
-The project uses CMake. It is recommended that you compile in a directory purposely
+The metric tree and metrics (in directories search and metric, respectively) are 
+in header only files. You may include these as so in you project. To work within
+the provided CMake project, is recommended that you compile in a directory purposely
 set aside for compiling. Say this directory is to be called "build". Consider
 performing these operations :
 
@@ -44,12 +46,35 @@ cmake ..
 make
 ```
 
+You may change compiler, compilation flags and compilation options manually. One popular choice (for gnu, debug version, using bash) is:
+```
+export CC=gcc
+export CXX=g++
+export CFLAGS="-g -O0  -Wall -Wpedantic -Wextra"
+export CXXFLAGS="-g -O0 -Wall -Wpedantic -Wextra"
+cd CMT/src
+mkdir build
+cd build
+cmake .. 
+cmake --build . -v 
+```
+
+ Additionally, to change the build options USE_HALF_INTERVALS and USE_NEXTAFTER away
+ from their defaults, the step  ``` cmake ..``` above can be replaced by:
+```cmake .. -DUSE_HALF_INTERVALS=ON  -DUSE_NEXTAFTER=OFF```
+
 Note that the executables will be automatically placed in directory CMT/bin.
+
+Some applications can use the parasail library to evaluate biosequence metrics.
+By default this option is turned off and may be selected by configuring with the
+compile option ```-DUSE_PARASAIL_LIB=ON```. Additionally one needs to modify the 
+toplevel CMakeLists.txt to specify the location of the parasail library.
+
 
 ## Using the VS Code IDE: 
 
 Technically no particular IDE is required to change, compile debug and add code,
-but development has largely been with Microsoft VS Code and that is what we recommend.
+but development has largely been with Microsoft VS Code.
 Open with Code (with "File -> Open Folder") the directory CMT and the file explorer
 should show the direcotry structure.
 

@@ -34,6 +34,7 @@
 #include "DistanceInterval.h"
 #include "TreeNodes.h"
 #include "SearchCommon.h"
+#include "PartitionFunction.h"
 #include "Query.h"
 #include "PerfStats.h"
 #include "SearchPQ.h"
@@ -60,18 +61,16 @@ protected:
 	NodePtr root;
 	std::vector < NodePtr> nodes;
 	//std::vector < Node> nodeMemory;
-	NodePtr buildTreeBOM(const NodeItr begin, const NodeItr end);
+	NodePtr buildTreePiv(const NodeItr begin, const NodeItr end);
 	NodePtr buildTreeAlt(const NodeItr begin, const NodeItr end);
-	NodePtr buildTreeDMR(const NodeItr begin, const NodeItr end);
-	NodePtr buildTreePCPE(const NodeItr begin, const NodeItr end);
-	void partition(const NodeItr begin,  NodeItr& median, const NodeItr end);
+
 	auto moveOverlap(const NodeItr begin, const NodeItr median, const NodeItr end);
 	void searchK(PQType& nodeQueue, T& target, SimilarityQuery<T>& sq, M& met);
 	void searchR(NodePtr& nd, T& target, SimilarityQuery<T>& q, M& met, std::vector<double>& dpivots);
 	void searchCollect(NodePtr& nd, T& target, SimilarityQuery<T>& q, M& met, std::vector<double>& dpivots);
 	void collect(NodePtr& nd, SimilarityQuery<T>& sq, M& met, const double dist);
 	void computeADIVec(const NodeItr begin, const NodeItr end);
-	void calculateDI(const NodeItr nd, const NodeItr fc, const NodeItr end);
+	void calculateDI(const NodeItr nd, const NodeItr begin, const NodeItr median, const NodeItr end);
 	void radiusSumAndDepths(NodePtr& nd, unsigned int depth, double& dsum, std::set<unsigned int>& depths);
 	double maxPruningDistance(PQNodePtr& pqNodePtr, NodePtr& nd);
 	double maxPruningDistance(NodePtr& nd, std::vector <double>& distStack);
@@ -99,8 +98,10 @@ protected:
 	//TODO: INTERVAL_DX has to be thought thorough 
 	//const float INTERVAL_DX = 0.0000001;
 	const float INTERVAL_DX = 0;
-
 	//NodeItr globalExt ;
+
+	PartitionFunction<Node,NodeItr,T,M>* pFunction;
+
 
 public:
 	CMTree_Base(std::vector < T >& objects, const M& met, 
@@ -132,7 +133,6 @@ public:
 	int getMADIorK() { return MADI; }
 
 	std::string shortName() const { return myShortName; }
-
 };
 
 
@@ -168,67 +168,24 @@ CMTree_Base <N, T, M>::CMTree_Base(std::vector < T > & objects, const M& met, Pi
 #endif
 
 	return;
-
-	
 }
 
+/*
+	Find the near and far member variable values of a node. We asume the distances to parents are stored
+	in the value far.
+*/
 template < typename N, typename T, typename M>
-typename CMTree_Base <N, T, M >::Node*
-CMTree_Base < N, T, M >::buildTreeBOM(const NodeItr begin, const NodeItr end) {
-	if (begin == end) { return nullptr; }
-	if ((end - begin) == 1) {
-		(*begin)->setLeaf();
-		computeADIVec(begin, end);
-		return *begin;
-	}
+void CMTree_Base < N, T, M >::calculateDI(const NodeItr nd, const NodeItr begin, 
+	const NodeItr median, const NodeItr end){
+	(*nd)->diL.reset();
+	(*nd)->diR.reset();
 
-	//Pivot will be a random object
-	auto rndIter = findRandomIter< NodeItr>(begin, end);
-	std::iter_swap(begin, rndIter);
-
-	const NodeItr firstC = begin + 1; //iterator pointing to first child
-	NodeItr median = firstC + (end - firstC) / 2; //median of the children
-
-	/**
-	Store the child node distances to the pivot! If a nodeis at level L (where root is at level 0),
-	the distance to its immediate parent is stored at dpivots[l-1], and to its grandparent at dpivots[l-2], etc.
-	**/
-	for (auto itr = firstC; itr != end; itr++) {
-		auto dist = metric.distance((*begin)->object, (*itr)->object);
-		(*itr)->dpivots.push_back(dist);
-		(*itr)->sstemp = dist;
-	}
-	calculateDI(begin, firstC, end);
-
-	//Partition into two sets by distance to the pivot object just calculated.
-	LessThanTemp<N> ltt;
-	std::nth_element(firstC, median, end, ltt);
-
-	(*begin)->left = buildTreeBOM(firstC, median);
-	(*begin)->right = buildTreeBOM(median, end);
-
-	//Compute and set the adi for the begin node;
-	computeADIVec(begin, end);
-
-	return *begin;
+	if (begin == end)
+		return;
+	LessThanTemp<Node> cf;
+	calculateDBI<Node,NodeItr,LessThanTemp<Node>> ( (*nd)->diL, begin, median, cf);
+	calculateDBI<Node,NodeItr,LessThanTemp<Node>> ( (*nd)->diR, median, end, cf);
 }
-
-/* Repartition to remove overlaps is any.  */
-template < typename N, typename T, typename M>
-auto
-CMTree_Base < N, T, M >::moveOverlap(const NodeItr start, const NodeItr median, const NodeItr end) {
-	auto newMedian = median;
-	if (end - start > 3) {
-		auto countL = std::count_if(start, median, EqualByVal<N>((*median)->sstemp));
-		//If there are any on the LHS with value equal to the median, repartition.
-		if(countL > 0){
-			LessThanVal<N> func((*median)->sstemp);
-			newMedian = std::partition(start, end, func);
-		}
-	}
-	return newMedian;
-}
-
 
 /**
 Compute the ancestral distance interval vector (ADI[]) for the node pointed to by the begin 
@@ -260,83 +217,19 @@ void CMTree_Base < N, T, M >::computeADIVec(const NodeItr begin, const NodeItr e
 	return;
 }
 
-
-template <typename N,  typename T, typename M>
-typename CMTree_Base <N, T, M>::Node*
-CMTree_Base < N, T, M >::buildTreePCPE(const NodeItr begin, const NodeItr end) {
-	if (begin == end) { return nullptr; }
-	if ((end - begin) == 1) {
-		(*begin)->setLeaf();
-		computeADIVec(begin, end);
-		return *begin;
-	}
-	const auto firstC = begin + 1; //iterator pointing to first child
-	auto median = firstC + (end - firstC) / 2;
-
-	//Pivot will be the object in the "center":
-	const auto nofSamples = 10;//=std::max(10, (int)std::ceil(std::log2(end - begin)));
-	NodeItr pivot = findCenter<T, NodeItr>(begin, end, metric, nofSamples);
-	std::iter_swap(begin, pivot); //The begin object is now the pivot object.
-
-	NodeItr extrema = findExtrema<T, NodeItr>(firstC, end, metric);
-
-	//if(globalExt == end){globalExt = findExtrema<T, NodeItr>(begin, end, metric);}
-
-	//With respect to the extrema, find the radius that partitions into equal sized subsets:
-	//First store (temporarily) the distances to the extrema somewhere:
-	for (auto itr = firstC; itr != end; itr++) {
-		//better to use Node temp variable thatn dpivots->push_back(d) followed by dpivots.pop_back();
-		(*itr)->sstemp = metric.distance((*itr)->object, (*extrema)->object);
-		//(*itr)->sstemp = metric.distance((*itr)->object, (*globalExt)->object);
-	}
-
-	//Partiton by distance to the extrema
-	//std::nth_element(firstC, median, end,
-	//	[](auto left, auto right) {
-	//		return left->sstemp < right->sstemp; });
-	// median = moveOverlap(firstC, median, end);
-
-	//Partition into two sets by distance to 
-	auto minElem = std::min_element(firstC, end, LessThanTemp<N>());
-	auto maxElem = std::max_element(firstC, end, LessThanTemp<N>());
-	double medDist = 0.5 * ((*maxElem)->sstemp + (*minElem)->sstemp);
-	LessThanVal<N> ltm(medDist);
-	median = std::partition(firstC, end, ltm);
-	//One way to take care of degenerate case:
-	if	(median == firstC || median == end) {
-		median = firstC + (end - firstC) / 2;
-	}
-
-
-	//And reset node->innerRadius to hold distance to pivot
-	for (auto itr = firstC; itr != end; itr++) {
-		auto dist = metric.distance((*begin)->object, (*itr)->object);
-		(*itr)->dpivots.push_back(dist);
-		(*itr)->sstemp = dist;
-	}
-
-	calculateDI(begin, firstC, end);
-
-	(*begin)->left = buildTreePCPE(firstC, median);
-	(*begin)->right = buildTreePCPE(median, end);
-
-	//Compute and set the DI vector for the begin node;
-	computeADIVec(begin, end);
-
-	return *begin;
-}
-
 /**
-buildTreeAlt()allows for the selection of different pivot selection and partitioning algorithms in 
-building the tree; the methods are to be specified inthe constructor.
-At time of writing there is no universal "best" set of partitioning and pivot selection
-methods, and this routine allows for experimentation with so far..
+buildTreePiv() tree building algorithm where the distances for partitioning are calculated relative
+to the pivot. The combinations of PivotType/PartType that is suppoerted here includes these six:
+[RAN,CEN,EXT]/[BOM,DMR].
 **/
 template < typename N, typename T, typename M>
 typename CMTree_Base <N, T, M>::Node*
-CMTree_Base < N, T, M >::buildTreeAlt(const NodeItr begin, const NodeItr end) {
-	if (begin == end) { return nullptr; }
-	if ((end - begin) == 1) {
+CMTree_Base < N, T, M >::buildTreePiv(const NodeItr begin, const NodeItr end) {
+	int size = 	end - begin;
+
+	if (size == 0) { 
+		return nullptr; 
+	}else if (size == 1) {
 		(*begin)->setLeaf();
 		computeADIVec(begin, end);
 		return *begin;
@@ -348,6 +241,7 @@ CMTree_Base < N, T, M >::buildTreeAlt(const NodeItr begin, const NodeItr end) {
 	LessThanLen<N> ltlf;
 	auto pivotItr = selectPivot<T, M, NodeItr, LessThanLen<N>>(begin, median, end, pivotType, ltlf, metric);
 	std::iter_swap(begin, pivotItr);
+	(*begin)->size= size;
 
 	//Note that the distance to tree root is stored at dpivots[0] for any node. 
 	for (auto itr = firstC; itr != end; itr++) {
@@ -355,76 +249,74 @@ CMTree_Base < N, T, M >::buildTreeAlt(const NodeItr begin, const NodeItr end) {
 		(*itr)->dpivots.push_back(dist);
 		(*itr)->sstemp = dist;
 	}
-	calculateDI(begin, firstC, end);
 
-	partition(firstC, median, end);
+	(*pFunction)(firstC, median, end);
 
-	(*begin)->left = buildTreeAlt(firstC, median);
-	(*begin)->right = buildTreeAlt(median, end);
+	calculateDI(begin, firstC, median, end);
 
-	//Compute and set the DI vector for the begin node;
+	(*begin)->left = buildTreePiv(firstC, median);
+	(*begin)->right = buildTreePiv(median, end);
+
 	computeADIVec(begin, end);
 	return *begin;
 }
 
-
-
+/**
+buildTreeAlt() is the tree building algorithm where the distances for partitioning are 
+relative to an object (an Alternative) that is not pivot. The PivotType/PartType 
+combination(s) suppported here is: [CENT/EXT]. Not that in the partitioing step,
+DMR is used once distances are calculated relative to the extrema.
+**/
 template < typename N, typename T, typename M>
 typename CMTree_Base <N, T, M>::Node*
-CMTree_Base < N, T, M >::buildTreeDMR(const NodeItr begin, const NodeItr end) {
-	if (begin == end) { return nullptr; }
-	if ((end - begin) == 1) {
+CMTree_Base < N, T, M >::buildTreeAlt(const NodeItr begin, const NodeItr end) {
+	int size = 	end - begin;
+
+	if (size == 0) { 
+		return nullptr; 
+	}else if (size == 1) {
 		(*begin)->setLeaf();
 		computeADIVec(begin, end);
 		return *begin;
 	}
 
-	//Pivot will be a random object
-	auto rndIter = findRandomIter< NodeItr>(begin, end);
-	std::iter_swap(begin, rndIter);
-
 	const NodeItr firstC = begin + 1; //iterator pointing to first child
 	NodeItr median = firstC + (end - firstC) / 2; //median of the children
 
-	/**
-	Store the child node distances to the pivot! If a nodeis at level L (where root is at level 0),
-	the distance to its immediate parent is stored at dpivots[l-1], and to its grandparent at dpivots[l-2], etc.
-	**/
+	//Set the central point as pivot
+	LessThanLen<N> ltlf;
+	auto pivotItr = selectPivot<T, M, NodeItr, LessThanLen<N>>(begin, median, end, pivotType, ltlf, metric);
+	std::iter_swap(begin, pivotItr);
+	(*begin)->size= size;
+
+	//Find an extrema among [fristC, end)]
+	auto extItr = findExtrema<T, NodeItr>(firstC, end, metric);
+	//Set distances to the extrema
+	for (auto itr = firstC; itr != end; itr++) {
+		auto dist = metric.distance((*extItr)->object, (*itr)->object);
+		(*itr)->sstemp = dist;
+	}
+	//partition by those distances
+	//For EXT, the partition function was set tp BOM or DMR
+	(*pFunction)(firstC, median, end);
+
+	//Now calc and set distances to the pivot.
+	//Note that the distance to tree root is stored at dpivots[0] for any node.
 	for (auto itr = firstC; itr != end; itr++) {
 		auto dist = metric.distance((*begin)->object, (*itr)->object);
 		(*itr)->dpivots.push_back(dist);
-		//(*itr)->dpivots.push_front(dist); 
 		(*itr)->sstemp = dist;
 	}
-	calculateDI(begin, firstC, end);
 
-	LessThanTemp<N> ltt;
-	auto minElem = std::min_element(firstC, end, ltt );
-	auto maxElem = std::max_element(firstC, end, ltt); 
-	double medDist = 0.5 * ((*maxElem)->sstemp + (*minElem)->sstemp);
-	LessThanVal<N> ltm(medDist);
-	median = std::partition(firstC, end, ltm);
+	calculateDI(begin, firstC, median, end);
 
-	(*begin)->left = buildTreeDMR(firstC, median);
-	(*begin)->right = buildTreeDMR(median, end);
+	(*begin)->left = buildTreeAlt(firstC, median);
+	(*begin)->right = buildTreeAlt(median, end);
 
-	//Compute and set the DI vector for the begin node;
 	computeADIVec(begin, end);
 	return *begin;
 }
 
-
-//PartType { PIV, EXT, MIN };
-template < typename N, typename T, typename M>
-void CMTree_Base < N, T, M >::partition(const NodeItr firstC, NodeItr& median, const NodeItr end) {
-if (partitionType == PartType::BOM) {
-		//Balanced (|LHS|=|RHS|) Object Median Partition.
-		std::nth_element(firstC, median, end, LessThanTemp<N>());
-	}
-	else {
-		error("partition function default");
-	}
-}
 
 template < typename N,  typename T, typename M>
 void CMTree_Base < N, T, M >::search(RadiusQuery<T>& q) {
@@ -475,28 +367,30 @@ void CMTree_Base < N, T, M >::search(NearestKQuery<T>& q) {
 	void CMTree_Base <N, T, M >::searchK(PQType & queue, T & target, SimilarityQuery<T> & sq, M & met) {
 		while (!queue.empty()) {
 			PQNodePtr qn = queue.top();
-			//perfStats.incNodesVisited();
 			queue.pop();
-			auto nd = qn->node;
+			auto tnd = qn->node;
 			if (qn->pruningDist <= sq.searchRadius()) {//this is the MAX pruning distance.
-				auto dist = met.distance(&target, nd->object);
+				auto dist = met.distance(&target, tnd->object);
 				perfStats.incDistanceCalls();
-				sq.addResult(nd->object, dist);
+				sq.addResult(tnd->object, dist);
 				qn->distance = dist;
-				auto pd = pruningDistance<double>(dist, nd->di.getNear(), nd->di.getFar());									
-				if (pd <= sq.searchRadius()) {
-					if (nd->left != nullptr) {
+				auto lnd = tnd->left;
+				auto rnd = tnd->right;
+				if (lnd != nullptr) {
+					if ( dist <= tnd->diL.getFar() + sq.searchRadius())  {
 						perfStats.incNodesVisited();
-						auto maxPruningDist = maxPruningDistance(qn, nd->left);
+						auto maxPruningDist = maxPruningDistance(qn, lnd);
 						if (maxPruningDist <= sq.searchRadius()) {
-							queue.push(queue.newNode(nd->left, qn, 0, maxPruningDist));
+							queue.push(queue.newNode(lnd, qn, 0, maxPruningDist));
 						}
 					}
-					if (nd->right != nullptr) {
+				}
+				if (rnd != nullptr) {
+					if (dist >= tnd->diR.getNear() - sq.searchRadius()){
 						perfStats.incNodesVisited();
-						auto maxPruningDist = maxPruningDistance(qn, nd->right);
+						auto maxPruningDist = maxPruningDistance(qn, rnd);
 						if (maxPruningDist <= sq.searchRadius()) {
-							queue.push(queue.newNode(nd->right, qn, 0, maxPruningDist));
+							queue.push(queue.newNode(rnd, qn, 0, maxPruningDist));
 						}
 					}
 				}
@@ -567,58 +461,34 @@ double CMTree_Base < N, T, M >::minCollectionDistance(NodePtr& nd, std::vector <
 	return minCD;
 }
 
-/**
-Return true if the node object plus the distance interval adi is completely inside the query volume.
-pqDist = distance from the node with adi to the Query center.
-radius = the query radius
-**/
-template < typename N, typename T, typename M>
-bool CMTree_Base <N,  T, M >::IntervalInsideQueryVol(double pqDist, double radius, DI& adi) {
-	if (pqDist + adi.getFar() <= radius) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
 
 //Radius (range) search for CMT, without the priority queue
+
 template < typename N, typename T, typename M>
 void CMTree_Base < N, T, M >::searchR(NodePtr& nd, T& target, SimilarityQuery<T>& sq, M& met,
 	std::vector <double>& distStack) {
 	if (nd == nullptr) return;
-	perfStats.incNodesVisited();
+	this->perfStats.incNodesVisited();
 	auto maxPD = maxPruningDistance(nd, distStack);
 	if (maxPD <= sq.searchRadius()) {
 		auto dist = met.distance(&target, nd->object);
-		perfStats.incDistanceCalls();
+		this->perfStats.incDistanceCalls();
 		sq.addResult(nd->object, dist);
-		auto pd = pruningDistance<double>(dist, nd->di.getNear(), nd->di.getFar());
-		if (pd <= sq.searchRadius()) {
-			distStack.push_back(dist);
-			searchR(nd->left, target, sq, met, distStack);
-			searchR(nd->right, target, sq, met, distStack);
-			distStack.pop_back();
+
+		distStack.push_back(dist);
+		if (nd->left != nullptr){
+			if (nd->diL.rangeOverlaps(dist, sq.searchRadius())){
+				searchR(nd->left, target, sq, met, distStack);
+			}
 		}
+		if (nd->right != nullptr){
+			if (nd->diR.rangeOverlaps(dist, sq.searchRadius())){
+				searchR(nd->right, target, sq, met, distStack);
+			}
+		}
+		distStack.pop_back();
+		return;
 	}
-	return;
-}
-
-
-/*
-	Find the near and far member variable values of a node. We asume the distances to parents are stored
-	in the value far.
-*/
-template < typename N, typename T, typename M>
-void CMTree_Base < N, T, M >::calculateDI(const NodeItr nd, const NodeItr firstC, const NodeItr end) {
-	auto near = std::numeric_limits<float>::max();
-	auto far = 0.0;
-	for (auto p = firstC; p != end; p++) {
-		if ((*p)->sstemp < near) near = (*p)->sstemp;
-		if ((*p)->sstemp > far) far = (*p)->sstemp;
-	}
-	(*nd)->di.setNear(near);
-	(*nd)->di.setFar(far + INTERVAL_DX);
 }
 
 
@@ -636,20 +506,26 @@ void CMTree_Base < N, T, M >::searchCollect(NodePtr& nd, T& target, SimilarityQu
 			return;
 		}
 
+		auto fd = nd->getFar();
 		auto dist = met.distance(&target, nd->object);
 		perfStats.incDistanceCalls();
-		if(dist + nd->di.getFar() <=  sq.searchRadius()){
-			collect(nd, sq, met, dist + nd->di.getFar() );
+		if(dist + fd <=  sq.searchRadius()){
+			collect(nd, sq, met, dist + fd );
 		}else{
 			sq.addResult(nd->object, dist);
-			auto pd = pruningDistance<double>(dist, nd->di.getNear(), nd->di.getFar());
-			if (pd <= sq.searchRadius()) {
-				distStack.push_back(dist);
-				searchCollect(nd->left, target, sq, met, distStack);
-				searchCollect(nd->right, target, sq, met, distStack);
-				distStack.pop_back();
-			}	
-		}
+			distStack.push_back(dist);
+			if (nd->left != nullptr){
+				if (nd->diL.rangeOverlaps(dist, sq.searchRadius())){
+					searchCollect(nd->left, target, sq, met, distStack);
+				}
+			}
+			if (nd->right != nullptr){
+	  			if (nd->diR.rangeOverlaps(dist, sq.searchRadius())){
+					searchCollect(nd->right, target, sq, met, distStack);
+				}	
+			}
+			distStack.pop_back();
+		}	
 	}
 	return;
 	}
@@ -674,9 +550,6 @@ void CMTree_Base <N, T, M >::collect(NodePtr& nd, SimilarityQuery<T>& sq, M& met
 		collect(nd->right, sq, met, dist);
 	}
 }
-
-
-
 
 
 template < typename N, typename T, typename M>
@@ -771,18 +644,25 @@ void CMTree_Base <N, T, M >::collectSpacePivots(NodePtr& nd,  const unsigned int
 
 template <typename T, typename M>
 class CMTree : public  CMTree_Base<CNode<T>, T, M> {
-	using CMTree_Base<CNode<T>, T, M>::CMTree_Base;
-	using CMTree_Base<CNode<T>, T, M>::MAX_NDI;
-	using CMTree_Base<CNode<T>, T, M>::NodeItr;
+	using Node = CNode<T>;  
+	using NodeItr = typename std::vector<Node*>::iterator;
+	using CMTree_Base<Node, T, M>::CMTree_Base;
+	using CMTree_Base<Node, T, M>::MAX_NDI;
 public:
 	CMTree(std::vector < T >& objects, const M& met, PivotType pivT, PartType partT, unsigned int maxdi = MAX_NDI):
-		CMTree_Base<CNode<T>, T, M>::CMTree_Base( objects, met, pivT, partT, maxdi){
+		CMTree_Base<Node, T, M>::CMTree_Base( objects, met, pivT, partT, maxdi){
 	    this->myShortName = "CMT";
 	
 		std::cout << "Starting CMTree::buildTree() piV parT Nobjects:" << 
 		this->pivotType << " " << this->partitionType << " " << objects.size() << std::endl;
-		// 
-		this->root = this->buildTreeAlt(this->nodes.begin(), this->nodes.end());
+		//
+		if( (pivT == PivotType::CENT) && (partT==PartType::EXT)){
+			this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( PartType::DMR );
+			this->root = this->buildTreeAlt(this->nodes.begin(), this->nodes.end());
+		} else{
+			this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( this->partitionType );
+			this->root = this->buildTreePiv(this->nodes.begin(), this->nodes.end());
+		}
 
 		this->freePivDistances (this->root);
 	

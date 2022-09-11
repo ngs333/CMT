@@ -31,12 +31,22 @@ namespace PerfStatsNS {
 	EXT => extremum
 	CENT => center
 */
-enum class PivotType { RAN};//Random, Extreme, MINIMUM, median, center, N/4
-enum class PartType {BOM};
 
-static std::map<PivotType, std::string> pivotTypeMap{ {PivotType::RAN, "RAN"} };
+enum class PivotType { RAN, EXT, RXT, MIN, MED, CENT, N4, TSP};//Random, Extreme, MINIMUM, median, center, N/4
+enum class PartType {OM, BOM, DMR, EXT, MIN  };
 
-static std::map<PartType, std::string> partTypeMap{ {PartType::BOM, "BOM"}};
+static std::map<PivotType, std::string> pivotTypeMap{ {PivotType::RAN, "RAN"},{PivotType::EXT, "EXT"},{PivotType::RXT, "RXT"},
+	{PivotType::MIN,"MIN"},{PivotType::MED, "MED"}, {PivotType::CENT, "CENT"},{PivotType::N4, "N4"} };
+
+static std::map<PartType, std::string> partTypeMap{ {PartType::OM, "OM"}, {PartType::BOM, "BOM"}, {PartType::DMR, "DMR"},
+	{PartType::EXT, "EXT"},{PartType::MIN,"MIN"} };
+
+static std::map<std::string, PivotType> pivotTypeRevMap{ {"RAN", PivotType::RAN},{"EXT", PivotType::EXT},{"RXT", PivotType::RXT},
+	{"MIN", PivotType::MIN},{"MED", PivotType::MED}, {"CENT", PivotType::CENT},{"N4", PivotType::N4} };
+
+static std::map<std::string, PartType> partTypeRevMap{ {"OM", PartType::OM}, {"BOM", PartType::BOM}, {"DMR", PartType::DMR,},
+	{"EXT", PartType::EXT,}, {"MIN", PartType::MIN} };
+
 
 std::ostream& operator<<(std::ostream& os, PivotType p) {
 	os << pivotTypeMap.at(p);
@@ -187,33 +197,8 @@ TPtr  findExtrema(const TPtr begin, const TPtr end, const TPtr peItr, Metric<T>&
 }
 
 
-/*
-Find and return an iterator the object with largest function value between it and 
-the object pointed to by peIter object. Objects considered are those in
-the range [begin, end) but not in idSet by id.
-*/
-/*
-template <typename TIter, typename Func>
-TIter  findExtrema(const TIter begin, const TIter end, TIter peItr, std::set<std::string>& idSet, Func func) {
-	if (end - begin == 1) {
-		return begin;
-	}
-	auto farDist = 0.0;
-	auto qIter = begin;
-	for (auto sIter = begin; sIter != end; sIter++) {
-		if (idSet.find((*sIter).getId()) != idSet.end()) {
-			continue;
-		}
-		auto dist = func(*sIter, *peItr);
-		if (dist > farDist) {
-			qIter = sIter;
-			farDist = dist;
-		}
-	}
-	return qIter;
-}
-*/
 
+/*
 template <typename T>
 std::vector<T>  
 findExtrema(std::vector<T> & points,  unsigned int NExt, const Metric<T>& mp) {
@@ -229,7 +214,8 @@ findExtrema(std::vector<T> & points,  unsigned int NExt, const Metric<T>& mp) {
 	}
 	return extrema;
 }
-
+*/
+/*
 template <class T, class RIter, class M>
 unsigned int findFurthest(std::vector<T>& objs,  const RIter refI  ,  M & met){
 	auto farDist = 0.0;
@@ -243,6 +229,7 @@ unsigned int findFurthest(std::vector<T>& objs,  const RIter refI  ,  M & met){
 	}
 	return farthest;
 }
+*/
 /*
 	Return a vector that contains a set NS of extrema objects.
 	The extrema objects are first determined by choosing NS
@@ -250,6 +237,7 @@ unsigned int findFurthest(std::vector<T>& objs,  const RIter refI  ,  M & met){
 	if NSE < NS, then NS - NSE objects from the original random set are 
 	the the final result set.
 */
+/*
 template <class T, class M>
 std::vector<T>
 getSubsetRandomExtrema(std::vector<T> &pts, const unsigned int NS,  M& mp){
@@ -277,7 +265,7 @@ getSubsetRandomExtrema(std::vector<T> &pts, const unsigned int NS,  M& mp){
 	}
 	return subset;
 }
-
+*/
 /*
 	Return the vector that contains the min-max set of pivots as per mico 1994 paper.
 	TODO: This is a work in progress. 
@@ -405,11 +393,32 @@ inline NodeItr selectPivot(const NodeItr begin, const NodeItr median,
 	case PivotType::RAN:
 		pivotItr = findRandomIter<NodeItr>(begin, end);
 		break;
+	case PivotType::EXT:
+		pivotItr = findExtrema<T, NodeItr>(begin, end, mp);
+		break;
+	case PivotType::RXT:
+		pivotItr = findRandomExtrema<T, NodeItr>(begin, end, mp);
+		break;
+	case PivotType::MIN:
+		pivotItr = std::min_element(begin, end, compare);
+		break;
+	case PivotType::MED:
+		std::nth_element(begin, median, end, compare);
+		pivotItr = median;
+		break;
+	case PivotType::CENT:
+		pivotItr = findCenter<T, NodeItr>(begin, end, mp, 10);
+		break;
+	case PivotType::N4:   //Pivot = median of the median (by SS) on the lef
+		std::nth_element(begin, mmIter, median + 1, compare);
+		pivotItr = mmIter;
+		break;
 	default:
 		error("selectPivot function default");
 	}
 	return pivotItr;
 }
+
 
 
 // Collect the Tree the nodes per level. Nodes on the LHS are visited 1st.

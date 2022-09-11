@@ -3,7 +3,7 @@
 
 #include <string>
 
-#ifdef SA_USE_PARASAIL
+#ifdef USE_PARASAIL_LIB
 
 #include "parasail.h"
 #include "parasail/matrices/blosum62.h"

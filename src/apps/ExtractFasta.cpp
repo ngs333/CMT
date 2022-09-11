@@ -1,4 +1,3 @@
-//#define SA_USE_PARASAIL
 //#define SA_USE_STATIC_DI
 
 #include <iostream>
