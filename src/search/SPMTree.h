@@ -76,8 +76,7 @@ protected:
 public:
 	//The constructor below also builds the tree.
 	SPMTree_Base(std::vector<T>& objects, const M& met, const PivotType pivT, const PartType partT);
-	~ SPMTree_Base(){
-		std::cout << "SPMTree_Base destructor" << std::endl;
+	~SPMTree_Base(){
 		for(const auto& nd : nodes){
 			delete nd;
 		}
