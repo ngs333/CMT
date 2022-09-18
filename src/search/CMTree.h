@@ -107,11 +107,12 @@ public:
 	CMTree_Base(std::vector < T >& objects, const M& met, 
 		PivotType pivT = PivotType::RAN, PartType partT = PartType::BOM, unsigned int maxdi = MAX_NDI);
 	virtual ~CMTree_Base() {
+		std::cout << "CMTree_Base destructor" << std::endl;
 		for (auto& nd : nodes) {
 			delete nd;
 		}
-		//	std::vector<Node*>().swap(nodes);
 		nodes.clear();
+		delete pFunction;
 	}
 
 	void searchCollect(SimilarityQuery<T> & q);	

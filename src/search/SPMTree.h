@@ -76,6 +76,13 @@ protected:
 public:
 	//The constructor below also builds the tree.
 	SPMTree_Base(std::vector<T>& objects, const M& met, const PivotType pivT, const PartType partT);
+	~ SPMTree_Base(){
+		std::cout << "SPMTree_Base destructor" << std::endl;
+		for(const auto& nd : nodes){
+			delete nd;
+		}
+		nodes.clear();
+	}
 
 	void searchCollect(SimilarityQuery<T> & q);	
 	void search(RadiusQuery<T> & q);

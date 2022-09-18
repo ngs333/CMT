@@ -80,7 +80,10 @@ public:
 		}
 		std::cout << "APMTree buildTree finished" << std::endl;
 	}
-
+~APMTree(){
+		std::cout << "APMTree destructor" << std::endl;
+		delete pFunction;
+}
 	void searchCollect(SimilarityQuery<T> & q);	
 	void search(RadiusQuery<T> & q);
 	void search(NearestKQuery<T>& q);
