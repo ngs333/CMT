@@ -110,8 +110,8 @@ public:
 		for (auto& nd : nodes) {
 			delete nd;
 		}
-		//	std::vector<Node*>().swap(nodes);
 		nodes.clear();
+		delete pFunction;
 	}
 
 	void searchCollect(SimilarityQuery<T> & q);	
